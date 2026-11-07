@@ -52,8 +52,9 @@ function gateError(t){var g=$('#gerr');g.textContent=t;g.hidden=false}
 function showGate(){
   $('#app').hidden=true;$('#gate').hidden=false;
   $('#setup').hidden=cfgOk;
-  $('#signIn').disabled=!cfgOk;
-  $('#signIn').textContent=cfgOk?'Sign in with Deluxe Drive':'Deluxe Drive is not connected';
+  var signIn=$('#signIn');
+  signIn.disabled=false;
+  signIn.textContent=cfgOk?'Sign in with Deluxe Drive':'Connect to Deluxe Drive';
   var change=$('#changeSetup');if(change)change.hidden=!cfgOk;
   var err=$('#setupErr');if(err)err.hidden=true;
 }
@@ -69,8 +70,28 @@ function renderAcct(){
     var s=el('button','link','Sign in');s.type='button';s.onclick=signOut;a.append(s);
   }
 }
-$('#signIn').onclick=startSignIn;
+$('#signIn').onclick=function(){
+  if(!cfgOk){openSetup();return}
+  startSignIn();
+};
 $('#preview').onclick=function(){preview=true;enterApp()};
+
+// The button must always do something: without a setup it opens the box that
+// takes one, rather than sitting there disabled and silent.
+function openSetup(notice){
+  var setup=$('#setup');
+  if(setup)setup.hidden=false;
+  var err=$('#setupErr');
+  if(err){
+    err.textContent=notice||'Paste the setup from Deluxe Drive first: account menu → Connect Deluxe Docs → Copy Docs setup.';
+    err.hidden=false;
+  }
+  var box=$('#setupText');
+  if(box){
+    box.focus();
+    if(box.scrollIntoView)box.scrollIntoView({block:'nearest'});
+  }
+}
 
 /* ---------- the setup copied from Deluxe Drive ---------- */
 function parseSetup(text){
