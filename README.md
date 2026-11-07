@@ -12,12 +12,12 @@ A document viewer with a PDF Expert style workspace and Deluxe Drive sign-in. A 
 No file has to be edited. On the first visit this page shows a **Connect to Deluxe Drive** box:
 
 1. In Deluxe Drive (running with its server), open the account menu → **Connect Deluxe Docs**.
-2. Paste this page's address, for example `https://you.github.io/deluxe-docs/`. The drive registers
-   it as an OAuth client, which also makes it the redirect address.
-3. Paste that link into the box on this page and press **Use this setup**. The page reads the link,
-   names its own address as the redirect, and the drive registers a client for it — so the same
-   account's id works on any copy of the viewer. It is kept in this browser and signs in straight
-   away.
+2. Paste this page's address, for example `https://deluxe-docs.netlify.app`. The drive registers it
+   as an OAuth client, which is also its redirect address.
+3. Copy the **Link ID** the drive shows (or use **Link for Deluxe Docs** in the account menu), paste
+   it into the box on this page and press **Use this setup**. The page reads the link, names its own
+   address as the redirect, and the drive registers a client for it — so the same account's id
+   works on any copy of the viewer. It is kept in this browser and signs in straight away.
 
 The link looks like `https://your-drive.example/connect/ab12cd34` and holds nothing secret: the
 client id is public and signing in still happens on the drive's own pages. It is made per account —
