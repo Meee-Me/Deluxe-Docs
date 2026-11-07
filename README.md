@@ -1,6 +1,6 @@
 # Deluxe Docs
 
-A document viewer with a PDF Expert style workspace and Deluxe Drive sign-in. One static page, no build step.
+A document viewer with a PDF Expert style workspace and Deluxe Drive sign-in. A static site, no build step: `index.html`, `styles.css`, `app.js` and `config.js`.
 
 - Tabs for several open files, page thumbnails, page jump, zoom, find in PDF
 - Highlight, draw and note tools on PDFs (kept while the tab is open)
@@ -9,9 +9,9 @@ A document viewer with a PDF Expert style workspace and Deluxe Drive sign-in. On
 
 ## Deluxe Drive sign-in
 
-The page signs in with OAuth 2.0 authorization code flow plus PKCE. Fill in the `deluxe-config` block near the top of `index.html`:
+The page signs in with OAuth 2.0 authorization code flow plus PKCE. Fill in `config.js`:
 
-```json
+```js
 {
   "driveName": "Deluxe Drive",
   "driveUrl": "https://drive.example.com",
@@ -38,3 +38,10 @@ Deluxe Drive file URLs must allow cross-origin reads from the viewer's origin (C
 - Legacy `.doc` and `.ppt` are not supported. Save as `.docx` / `.pptx`.
 - PowerPoint is a close approximation (text, images, basic fills).
 - Annotations are not yet written back into the PDF.
+
+## Run it
+
+- **GitHub Pages:** Settings, Pages, deploy from branch `main` (root). The address will be `https://<user>.github.io/<repo>/`.
+- **Locally:** `npm start`, or `python3 -m http.server 8000` and open http://localhost:8000.
+
+Sign-in and link opening need an `https` address (or localhost).

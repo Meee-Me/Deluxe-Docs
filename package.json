@@ -1,0 +1,9 @@
+{
+  "name": "deluxe-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Document viewer with Deluxe Drive sign-in",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
