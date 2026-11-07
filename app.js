@@ -32,6 +32,9 @@ async function startSignIn(){
     var st=b64u(crypto.getRandomValues(new Uint8Array(16)));
     ss('dd_v',v);ss('dd_s',st);
     var q=new URLSearchParams({response_type:'code',client_id:CFG.clientId,redirect_uri:redirectUri(),scope:CFG.scope||'openid profile',state:st,code_challenge:c,code_challenge_method:'S256'});
+    // The connection link belongs to one drive account; the drive offers that
+    // name on its own sign-in page. The password is still asked for there.
+    if(CFG.accountId)q.set('login_hint',CFG.accountId);
     location.assign(CFG.authorizeUrl+(CFG.authorizeUrl.indexOf('?')>-1?'&':'?')+q.toString());
   }catch(e){gateError('Sign-in could not start in this browser.')}
 }
@@ -98,7 +101,7 @@ function parseSetupObject(v){
   if(!v||typeof v!=='object')throw new Error('Paste the connection link Deluxe Drive copied.');
 
   var out={};
-  ['driveName','driveUrl','authorizeUrl','tokenUrl','userInfoUrl','clientId','scope'].forEach(function(k){
+  ['driveName','driveUrl','authorizeUrl','tokenUrl','userInfoUrl','clientId','accountId','scope'].forEach(function(k){
     if(typeof v[k]==='string'&&v[k].trim())out[k]=v[k].trim();
   });
 

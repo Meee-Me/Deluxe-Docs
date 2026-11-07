@@ -19,9 +19,10 @@ No file has to be edited. On the first visit this page shows a **Connect to Delu
    client id registered for this page — keeps it in this browser and signs in straight away.
 
 The link looks like `https://your-drive.example/connect/ab12cd34` and holds nothing secret: the
-client id is public and signing in still happens on the drive's own pages. `config.js` still works
-for a copy deployed with one fixed drive, and a pasted link overrides it; **Use a different Deluxe
-Drive** clears it.
+client id is public and signing in still happens on the drive's own pages. It is made per account —
+each person on the drive copies their own — and the account it belongs to is offered by name on the
+drive's sign-in page. `config.js` still works for a copy deployed with one fixed drive, and a pasted
+link overrides it; **Use a different Deluxe Drive** clears it.
 
 The page signs in with OAuth 2.0 authorization code flow plus PKCE, shows the drive's own sign-in
 and consent pages, and keeps the access token in `sessionStorage`. The token is sent only to files
