@@ -94,10 +94,8 @@ function openSetup(notice){
 }
 
 /* ---------- the setup copied from Deluxe Drive ---------- */
-function parseSetup(text){
-  var v;
-  try{v=JSON.parse(String(text||'').trim())}catch(e){throw new Error('That is not valid JSON. Copy the whole setup from Deluxe Drive again.')}
-  if(!v||typeof v!=='object')throw new Error('Paste the setup Deluxe Drive copied.');
+function parseSetupObject(v){
+  if(!v||typeof v!=='object')throw new Error('Paste the connection link Deluxe Drive copied.');
 
   var out={};
   ['driveName','driveUrl','authorizeUrl','tokenUrl','userInfoUrl','clientId','scope'].forEach(function(k){
@@ -117,10 +115,36 @@ function parseSetup(text){
   return out;
 }
 
-$('#saveSetup').onclick=function(){
+function parseSetup(text){
+  var v;
+  try{v=JSON.parse(String(text||'').trim())}catch(e){throw new Error('That is not a connection link or a setup. Copy the link from Deluxe Drive.')}
+  return parseSetupObject(v);
+}
+
+// One paste: the connection link Deluxe Drive prints, or the setup it answers
+// with. The link is read here, on the viewer's own origin, and nothing secret
+// comes back — signing in still happens on the drive's pages.
+async function readSetup(text){
+  var raw=String(text||'').trim();
+  if(!raw)throw new Error('Paste the connection link Deluxe Drive copied.');
+
+  if(/^https?:\/\//i.test(raw)){
+    var r;
+    try{r=await fetch(raw,{headers:{Accept:'application/json'},mode:'cors'})}
+    catch(e){throw new Error('That link could not be read here. Copy the whole link from Deluxe Drive.')}
+    if(!r.ok)throw new Error('That link answered '+r.status+'. Make a new connection link in Deluxe Drive.');
+    var data;
+    try{data=await r.json()}catch(e){throw new Error('That link did not return a setup.')}
+    return parseSetupObject(data);
+  }
+
+  return parseSetup(raw);
+}
+
+$('#saveSetup').onclick=async function(){
   var err=$('#setupErr');
   try{
-    var setup=parseSetup($('#setupText').value);
+    var setup=await readSetup($('#setupText').value);
     try{localStorage.setItem(SETUP_KEY,JSON.stringify(setup))}catch(e){throw new Error('This browser would not keep the setup. Allow storage for this site and try again.')}
 
     applyConfig();

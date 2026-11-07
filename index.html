@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Deluxe Docs</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=3">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
 </head>
 <body>
@@ -20,8 +20,8 @@
     <button class="link" id="changeSetup" type="button" hidden style="justify-self:start">Use a different Deluxe Drive</button>
     <div class="setup" id="setup" hidden>
       <strong>Deluxe Drive is not connected yet</strong>
-      <span>In Deluxe Drive, open the account menu, choose <b>Connect Deluxe Docs</b>, then <b>Copy Docs setup</b>, and paste it here. It fills in everything the sign-in needs, so there is no file to edit.</span>
-      <textarea id="setupText" rows="6" spellcheck="false" autocapitalize="none" autocorrect="off" placeholder='{"driveUrl":"https://…","authorizeUrl":"https://…/oauth/authorize","tokenUrl":"https://…/oauth/token","userInfoUrl":"https://…/oauth/userinfo","clientId":"dc_…","scope":"openid profile"}'></textarea>
+      <span>In Deluxe Drive, open the account menu, choose <b>Connect Deluxe Docs</b>, then <b>Copy connection link</b>, and paste that link here. It is one link, and it needs no file edited.</span>
+      <textarea id="setupText" rows="4" spellcheck="false" autocapitalize="none" autocorrect="off" placeholder="https://your-drive.freemilk.app/connect/ab12cd34"></textarea>
       <button class="pill primary" id="saveSetup" type="button">Use this setup</button>
       <div class="hint" id="setupErr" role="alert" hidden></div>
       <button class="link" id="preview" type="button" style="justify-self:start">Continue in preview mode without signing in</button>
@@ -116,6 +116,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="config.js"></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

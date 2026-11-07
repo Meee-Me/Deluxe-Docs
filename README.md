@@ -14,12 +14,14 @@ No file has to be edited. On the first visit this page shows a **Connect to Delu
 1. In Deluxe Drive (running with its server), open the account menu → **Connect Deluxe Docs**.
 2. Paste this page's address, for example `https://you.github.io/deluxe-docs/`. The drive registers
    it as an OAuth client, which also makes it the redirect address.
-3. Press **Copy Docs setup** there, then paste the setup into the box on this page and press
-   **Use this setup**. It is kept in this browser and the page signs in straight away.
+3. Press **Copy connection link** there, paste that link into the box on this page and press
+   **Use this setup**. The page reads the link — it answers with the drive's endpoints and the
+   client id registered for this page — keeps it in this browser and signs in straight away.
 
-The setup carries `driveUrl`, `authorizeUrl`, `tokenUrl`, `userInfoUrl`, `clientId` and `scope`.
-`config.js` still works for a copy deployed with one fixed drive, and a pasted setup overrides it;
-**Use a different Deluxe Drive** clears the pasted one.
+The link looks like `https://your-drive.example/connect/ab12cd34` and holds nothing secret: the
+client id is public and signing in still happens on the drive's own pages. `config.js` still works
+for a copy deployed with one fixed drive, and a pasted link overrides it; **Use a different Deluxe
+Drive** clears it.
 
 The page signs in with OAuth 2.0 authorization code flow plus PKCE, shows the drive's own sign-in
 and consent pages, and keeps the access token in `sessionStorage`. The token is sent only to files
