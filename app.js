@@ -132,8 +132,15 @@ async function readSetup(text){
   if(!raw)throw new Error('Paste the connection link Deluxe Drive copied.');
 
   if(/^https?:\/\//i.test(raw)){
+    var target;
+    try{
+      target=new URL(raw);
+      // This page's own address, so the drive registers a client for it even
+      // if the link was made somewhere else.
+      target.searchParams.set('redirect',redirectUri());
+    }catch(e){throw new Error('That is not a link. Copy the whole link from Deluxe Drive.')}
     var r;
-    try{r=await fetch(raw,{headers:{Accept:'application/json'},mode:'cors'})}
+    try{r=await fetch(target.href,{headers:{Accept:'application/json'},mode:'cors'})}
     catch(e){throw new Error('That link could not be read here. Copy the whole link from Deluxe Drive.')}
     if(!r.ok)throw new Error('That link answered '+r.status+'. Make a new connection link in Deluxe Drive.');
     var data;
