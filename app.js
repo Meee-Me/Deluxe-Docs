@@ -6,9 +6,21 @@ var el=function(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=
 var stage=$('#stage'),side=$('#side'),thumbs=$('#thumbs');
 
 /* ---------- config + Deluxe Drive sign-in (OAuth 2.0 code flow with PKCE) ---------- */
-var CFG=window.DELUXE_CONFIG||{};
-var cfgOk=!!(CFG.authorizeUrl&&CFG.tokenUrl&&CFG.clientId);
-var driveOrigin='';try{if(CFG.driveUrl)driveOrigin=new URL(CFG.driveUrl).origin}catch(e){}
+/* Deluxe Drive copies its setup, which is pasted once and kept in this browser, so
+   nothing has to be edited by hand. config.js still works as the default for a
+   deployed copy, and the pasted setup wins over it. */
+var SETUP_KEY='dd.config';
+var CFG={},cfgOk=false,driveOrigin='';
+function readSetup(){
+  try{var raw=localStorage.getItem(SETUP_KEY);if(!raw)return null;var v=JSON.parse(raw);return v&&typeof v==='object'?v:null}catch(e){return null}
+}
+function applyConfig(extra){
+  CFG=Object.assign({},window.DELUXE_CONFIG||{},readSetup()||{},extra||{});
+  cfgOk=!!(CFG.authorizeUrl&&CFG.tokenUrl&&CFG.clientId);
+  driveOrigin='';
+  try{if(CFG.driveUrl)driveOrigin=new URL(CFG.driveUrl).origin}catch(e){}
+}
+applyConfig();
 var auth=null,preview=false,memStore={};
 function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){if(v===undefined)return memStore[k]||null;if(v===null)delete memStore[k];else memStore[k]=v}}
 function b64u(bytes){var s='';for(var i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -41,6 +53,9 @@ function showGate(){
   $('#app').hidden=true;$('#gate').hidden=false;
   $('#setup').hidden=cfgOk;
   $('#signIn').disabled=!cfgOk;
+  $('#signIn').textContent=cfgOk?'Sign in with Deluxe Drive':'Deluxe Drive is not connected';
+  var change=$('#changeSetup');if(change)change.hidden=!cfgOk;
+  var err=$('#setupErr');if(err)err.hidden=true;
 }
 function renderAcct(){
   var a=$('#acct');a.replaceChildren();
@@ -56,6 +71,53 @@ function renderAcct(){
 }
 $('#signIn').onclick=startSignIn;
 $('#preview').onclick=function(){preview=true;enterApp()};
+
+/* ---------- the setup copied from Deluxe Drive ---------- */
+function parseSetup(text){
+  var v;
+  try{v=JSON.parse(String(text||'').trim())}catch(e){throw new Error('That is not valid JSON. Copy the whole setup from Deluxe Drive again.')}
+  if(!v||typeof v!=='object')throw new Error('Paste the setup Deluxe Drive copied.');
+
+  var out={};
+  ['driveName','driveUrl','authorizeUrl','tokenUrl','userInfoUrl','clientId','scope'].forEach(function(k){
+    if(typeof v[k]==='string'&&v[k].trim())out[k]=v[k].trim();
+  });
+
+  if(!out.authorizeUrl||!out.tokenUrl||!out.clientId)throw new Error('That setup is missing its authorize, token or client id.');
+
+  ['driveUrl','authorizeUrl','tokenUrl','userInfoUrl'].forEach(function(k){
+    if(!out[k])return;
+    var u;
+    try{u=new URL(out[k])}catch(e){throw new Error('“'+out[k]+'” is not a web address.')}
+    var local=u.hostname==='localhost'||u.hostname==='127.0.0.1'||u.hostname==='[::1]';
+    if(u.protocol!=='https:'&&!(u.protocol==='http:'&&local))throw new Error('Deluxe Drive sign-in needs an https address.');
+  });
+
+  return out;
+}
+
+$('#saveSetup').onclick=function(){
+  var err=$('#setupErr');
+  try{
+    var setup=parseSetup($('#setupText').value);
+    try{localStorage.setItem(SETUP_KEY,JSON.stringify(setup))}catch(e){throw new Error('This browser would not keep the setup. Allow storage for this site and try again.')}
+
+    applyConfig();
+    $('#setupText').value='';
+    showGate();
+    if(cfgOk)startSignIn();
+  }catch(e){
+    err.textContent=e.message;
+    err.hidden=false;
+  }
+};
+
+$('#changeSetup').onclick=function(){
+  try{localStorage.removeItem(SETUP_KEY)}catch(e){}
+  applyConfig();
+  $('#setupText').value='';
+  showGate();
+};
 
 /* ---------- icons ---------- */
 var IC={plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',

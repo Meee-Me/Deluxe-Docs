@@ -7,31 +7,37 @@ A document viewer with a PDF Expert style workspace and Deluxe Drive sign-in. A 
 - Opens PDF, Word (.docx), Excel and CSV, PowerPoint (.pptx), images, audio, video and text
 - Reads the file's own contents to pick the viewer, so links with no extension or the wrong one still open
 
-## Deluxe Drive sign-in
+## Connecting to Deluxe Drive
 
-The page signs in with OAuth 2.0 authorization code flow plus PKCE. Fill in `config.js`:
+No file has to be edited. On the first visit this page shows a **Connect to Deluxe Drive** box:
 
-```js
-{
-  "driveName": "Deluxe Drive",
-  "driveUrl": "https://drive.example.com",
-  "authorizeUrl": "https://drive.example.com/oauth/authorize",
-  "tokenUrl": "https://drive.example.com/oauth/token",
-  "userInfoUrl": "https://drive.example.com/oauth/userinfo",
-  "clientId": "your-public-client-id",
-  "scope": "openid profile"
-}
-```
+1. In Deluxe Drive (running with its server), open the account menu → **Connect Deluxe Docs**.
+2. Paste this page's address, for example `https://you.github.io/deluxe-docs/`. The drive registers
+   it as an OAuth client, which also makes it the redirect address.
+3. Press **Copy Docs setup** there, then paste the setup into the box on this page and press
+   **Use this setup**. It is kept in this browser and the page signs in straight away.
 
-In Deluxe Drive, register this page's address (for example `https://you.github.io/deluxe-docs/`) as an allowed redirect URI for that client. Until `authorizeUrl`, `tokenUrl` and `clientId` are set, the page shows a setup notice and offers a preview mode.
+The setup carries `driveUrl`, `authorizeUrl`, `tokenUrl`, `userInfoUrl`, `clientId` and `scope`.
+`config.js` still works for a copy deployed with one fixed drive, and a pasted setup overrides it;
+**Use a different Deluxe Drive** clears the pasted one.
 
-The access token is kept in `sessionStorage` and is sent only to files on the `driveUrl` origin.
+The page signs in with OAuth 2.0 authorization code flow plus PKCE, shows the drive's own sign-in
+and consent pages, and keeps the access token in `sessionStorage`. The token is sent only to files
+on the `driveUrl` origin.
 
 ## Redirect from Deluxe Drive
 
-Set Deluxe Drive's "open with" address to `https://YOUR-HOST/deluxe-docs/?url=` and let it append the file's direct link. Optional `&name=report.pdf` sets the tab title. Unsigned visitors are sent to sign in first, then the file opens.
+Deluxe Drive opens this page with the file's direct link appended:
 
-Deluxe Drive file URLs must allow cross-origin reads from the viewer's origin (CORS), including the `Authorization` header.
+```
+https://YOUR-HOST/deluxe-docs/?url=<file link>&name=report.pdf
+```
+
+`url` is the file to open and `name` (optional) sets the tab title. A signed-out visitor is sent to
+Deluxe Drive to sign in first, and the file opens when they come back.
+
+Deluxe Drive file URLs must allow cross-origin reads from the viewer's origin (CORS), including the
+`Authorization` header. Share links (`/s/<token>`) already do.
 
 ## Limits
 - Sign-in controls access to files on Deluxe Drive. The page itself is static, so it is not a place to hide secrets.

@@ -14,12 +14,16 @@
 <section class="gate" id="gate" hidden>
   <div class="gcard">
     <div class="brand"><span class="mark" aria-hidden="true"></span><span class="t">Deluxe Docs</span></div>
-    <h1>Sign in to open your documents</h1>
-    <p>Use your Deluxe Drive account. Files you open from Deluxe Drive load here after you sign in.</p>
+    <h1>Connect to Deluxe Drive</h1>
+    <p>Deluxe Drive sends documents here, and confirms which account is allowed to read them.</p>
     <button class="pill primary" id="signIn" type="button">Sign in with Deluxe Drive</button>
+    <button class="link" id="changeSetup" type="button" hidden style="justify-self:start">Use a different Deluxe Drive</button>
     <div class="setup" id="setup" hidden>
       <strong>Deluxe Drive is not connected yet</strong>
-      <span>Sign-in needs these values in <code>config.js</code>: <code>authorizeUrl</code>, <code>tokenUrl</code>, <code>clientId</code> (and <code>userInfoUrl</code>, <code>driveUrl</code>). Register this page's address as the redirect URI in Deluxe Drive.</span>
+      <span>In Deluxe Drive, open the account menu, choose <b>Connect Deluxe Docs</b>, then <b>Copy Docs setup</b>, and paste it here. It fills in everything the sign-in needs, so there is no file to edit.</span>
+      <textarea id="setupText" rows="6" spellcheck="false" autocapitalize="none" autocorrect="off" placeholder='{"driveUrl":"https://…","authorizeUrl":"https://…/oauth/authorize","tokenUrl":"https://…/oauth/token","userInfoUrl":"https://…/oauth/userinfo","clientId":"dc_…","scope":"openid profile"}'></textarea>
+      <button class="pill primary" id="saveSetup" type="button">Use this setup</button>
+      <div class="hint" id="setupErr" role="alert" hidden></div>
       <button class="link" id="preview" type="button" style="justify-self:start">Continue in preview mode without signing in</button>
     </div>
     <div class="hint" id="gerr" role="alert" hidden></div>
