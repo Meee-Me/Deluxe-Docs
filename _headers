@@ -1,0 +1,12 @@
+# The page and its settings are always checked for a newer copy, so an update
+# shows on the next visit instead of an old saved page.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/config.js
+  Cache-Control: no-cache
+/app.js
+  Cache-Control: no-cache
+/styles.css
+  Cache-Control: no-cache
