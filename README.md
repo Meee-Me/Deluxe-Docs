@@ -1,6 +1,6 @@
 # Deluxe Docs
 
-A document viewer with a PDF Expert style workspace and Deluxe Drive sign-in. A static site, no build step: `index.html`, `styles.css`, `app.js` and `config.js`.
+A document viewer with a PDF Expert style workspace, connected to Deluxe Drive by a link ID. A static site, no build step: `index.html`, `styles.css`, `app.js` and `config.js`.
 
 - Tabs for several open files, page thumbnails, page jump, zoom, find in PDF
 - Highlight, draw and note tools on PDFs (kept while the tab is open)
@@ -9,25 +9,20 @@ A document viewer with a PDF Expert style workspace and Deluxe Drive sign-in. A 
 
 ## Connecting to Deluxe Drive
 
-No file has to be edited. On the first visit this page shows a **Connect to Deluxe Drive** box:
+1. In Deluxe Drive, open the account menu → **Connect Deluxe Docs** → **Generate link ID**.
+   A code like `62EJ-CBTD-V98W` appears and is copied.
+2. Paste it into the **Link ID** box on this page within 60 seconds. It connects as soon as a whole
+   code is pasted (spaces, dashes and lower case are fine).
 
-1. In Deluxe Drive (running with its server), open the account menu → **Connect Deluxe Docs**.
-2. Paste this page's address, for example `https://deluxe-docs.deluxelordd.workers.dev`. The drive registers it
-   as an OAuth client, which is also its redirect address.
-3. Copy the **Link ID** the drive shows (or use **Link for Deluxe Docs** in the account menu), paste
-   it into the box on this page and press **Use this setup**. The page reads the link, names its own
-   address as the redirect, and the drive registers a client for it — so the same account's id
-   works on any copy of the viewer. It is kept in this browser and signs in straight away.
+The drive finds the account the code belongs to and gives this browser a key that can only read that
+account's files. The key lasts 30 days and is kept in this browser; **Disconnect** (top right) ends it.
+A code works once, and a newer code ends an older one.
 
-The link looks like `https://your-drive.example/connect/ab12cd34` and holds nothing secret: the
-client id is public and signing in still happens on the drive's own pages. It is made per account —
-each person on the drive copies their own — and the account it belongs to is offered by name on the
-drive's sign-in page. `config.js` still works for a copy deployed with one fixed drive, and a pasted
-link overrides it; **Use a different Deluxe Drive** clears it.
+Once connected, the **Deluxe Drive** button lists the account's folders and files, with search, and
+opens any of them in a new tab.
 
-The page signs in with OAuth 2.0 authorization code flow plus PKCE, shows the drive's own sign-in
-and consent pages, and keeps the access token in `sessionStorage`. The token is sent only to files
-on the `driveUrl` origin.
+Which drive this page connects to is set in `config.js` (`driveUrl`, by default
+`https://deluxe-drive.deluxelordd.workers.dev`).
 
 ## Redirect from Deluxe Drive
 
@@ -37,8 +32,8 @@ Deluxe Drive opens this page with the file's direct link appended:
 https://YOUR-HOST/deluxe-docs/?url=<file link>&name=report.pdf
 ```
 
-`url` is the file to open and `name` (optional) sets the tab title. A signed-out visitor is sent to
-Deluxe Drive to sign in first, and the file opens when they come back.
+`url` is the file to open and `name` (optional) sets the tab title. If this browser is not connected
+yet, the file waits until a link ID has been pasted, then opens.
 
 Deluxe Drive file URLs must allow cross-origin reads from the viewer's origin (CORS), including the
 `Authorization` header. Share links (`/s/<token>`) already do.
@@ -60,6 +55,3 @@ Deluxe Drive file URLs must allow cross-origin reads from the viewer's origin (C
 
 Sign-in and link opening need an `https` address (or localhost).
 
-The Deluxe Drive it connects to must allow this page's address. On Cloudflare that is
-`ALLOWED_DOCS_ORIGINS` in the drive's `wrangler.jsonc`, which already lists
-`https://deluxe-docs.deluxelordd.workers.dev`.

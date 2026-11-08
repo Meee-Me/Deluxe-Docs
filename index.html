@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Deluxe Docs</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
 </head>
 <body>
@@ -15,17 +15,12 @@
   <div class="gcard">
     <div class="brand"><span class="mark" aria-hidden="true"></span><span class="t">Deluxe Docs</span></div>
     <h1>Connect to Deluxe Drive</h1>
-    <p>Deluxe Drive sends documents here, and confirms which account is allowed to read them.</p>
-    <button class="pill primary" id="signIn" type="button">Sign in with Deluxe Drive</button>
-    <button class="link" id="changeSetup" type="button" hidden style="justify-self:start">Use a different Deluxe Drive</button>
-    <div class="setup" id="setup" hidden>
-      <strong>Deluxe Drive is not connected yet</strong>
-      <span>In Deluxe Drive, open the account menu, choose <b>Connect Deluxe Docs</b>, then <b>Copy connection link</b>, and paste that link here. It is one link, and it needs no file edited.</span>
-      <textarea id="setupText" rows="4" spellcheck="false" autocapitalize="none" autocorrect="off" placeholder="https://your-drive.freemilk.app/connect/ab12cd34"></textarea>
-      <button class="pill primary" id="saveSetup" type="button">Use this setup</button>
-      <div class="hint" id="setupErr" role="alert" hidden></div>
-      <button class="link" id="preview" type="button" style="justify-self:start">Continue in preview mode without signing in</button>
-    </div>
+    <p>In Deluxe Drive, open the account menu, choose <b>Connect Deluxe Docs</b> and press <b>Generate link ID</b>. Paste it here within 60 seconds.</p>
+    <form class="gform" id="gateForm" autocomplete="off">
+      <label class="field" for="linkIn"><span class="flabel">Link ID</span>
+        <input id="linkIn" class="linkin" type="text" placeholder="ABCD-EFGH-JKLM" maxlength="40" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go"></label>
+      <button class="pill primary" id="connectBtn" type="submit">Connect</button>
+    </form>
     <div class="hint" id="gerr" role="alert" hidden></div>
   </div>
 </section>
@@ -86,18 +81,10 @@
       <p class="hint">Any file type works. The type is read from the file itself, so links without a file extension open too.</p>
     </form>
     <section class="panel" id="drivePanel" hidden>
-      <h2>Deluxe Drive redirect</h2>
-      <p>Set this as Deluxe Drive's "open with" address. Opening any document there (PDF, Word, Excel, PowerPoint, images, text) redirects here and the file opens in a new tab.</p>
-      <div class="cols">
-        <div class="field"><label for="tmpl">Redirect address</label>
-          <div class="row"><input type="text" id="tmpl" readonly><button class="pill" type="button" data-copy="tmpl">Copy</button></div>
-          <span class="hint">Deluxe Drive adds the file's direct link to the end.</span></div>
-        <div class="field"><label for="fileLink">Try it with a direct file link</label>
-          <input type="url" id="fileLink" placeholder="https://drive.example.com/files/budget.xlsx" autocomplete="off">
-          <div class="row" style="margin-top:6px"><input type="text" id="made" readonly placeholder="The viewer link appears here"><button class="pill" type="button" data-copy="made">Copy</button></div></div>
-      </div>
-      <div class="state" id="driveState"></div>
-      <p class="hint">Opening by link needs this page hosted on your own site and Deluxe Drive file links that allow this site to read them. Files you pick or drop always open.</p>
+      <div class="dhead"><h2>Deluxe Drive</h2><div class="state" id="driveState"></div></div>
+      <div class="row"><input type="search" id="dSearch" placeholder="Search your files" aria-label="Search your files" autocomplete="off"><button class="pill" type="button" id="dRefresh">Refresh</button></div>
+      <nav class="crumbs" id="dCrumbs" aria-label="Folder"></nav>
+      <div class="dlist" id="dList"></div>
     </section>
   </div>
 
@@ -116,6 +103,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="config.js"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

@@ -1,11 +1,6 @@
-/* Deluxe Drive sign-in settings. Fill these in, then register this site's address
-   as an allowed redirect URI for the client in Deluxe Drive. */
+/* Which Deluxe Drive this copy of Deluxe Docs connects to. A link ID made in that
+   drive (account menu, Connect Deluxe Docs, Generate link ID) is pasted here. */
 window.DELUXE_CONFIG = {
   "driveName": "Deluxe Drive",
-  "driveUrl": "",
-  "authorizeUrl": "",
-  "tokenUrl": "",
-  "userInfoUrl": "",
-  "clientId": "",
-  "scope": "openid profile"
+  "driveUrl": "https://deluxe-drive.deluxelordd.workers.dev"
 };
