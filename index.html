@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Deluxe Docs</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=9">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
 </head>
 <body>
@@ -69,11 +69,17 @@
       <button class="ibtn" data-tool="select" aria-pressed="true" aria-label="Select" title="Select"><svg viewBox="0 0 24 24" data-ic="cursor"></svg></button>
       <button class="ibtn" data-tool="hl" aria-pressed="false" aria-label="Highlight" title="Highlight"><svg viewBox="0 0 24 24" data-ic="hl"></svg></button>
       <button class="ibtn" data-tool="pen" aria-pressed="false" aria-label="Draw" title="Draw"><svg viewBox="0 0 24 24" data-ic="pen"></svg></button>
+      <button class="ibtn" data-tool="text" aria-pressed="false" aria-label="Add text" title="Add text"><svg viewBox="0 0 24 24" data-ic="text"></svg></button>
+      <button class="ibtn" data-tool="sign" aria-pressed="false" aria-label="Sign" title="Sign"><svg viewBox="0 0 24 24" data-ic="sign"></svg></button>
       <button class="ibtn" data-tool="note" aria-pressed="false" aria-label="Note" title="Note"><svg viewBox="0 0 24 24" data-ic="note"></svg></button>
       <span id="swatches" class="grp" style="gap:6px;margin:0 6px"></span>
       <button class="ibtn" id="undo" aria-label="Undo" title="Undo" disabled><svg viewBox="0 0 24 24" data-ic="undo"></svg></button>
     </div>
     <div class="sp"></div>
+    <div class="grp" id="saveGrp" hidden>
+      <button class="pill primary" id="saveBtn" type="button">Save</button>
+      <button class="pill" id="dlBtn" type="button" style="margin-left:6px">Download</button>
+    </div>
     <div class="grp">
       <button class="pill primary" id="driveBtn" aria-pressed="false">My files</button>
       <button class="pill" id="openBtn" style="margin-left:6px" title="Open a file from this device">Open from device</button>
@@ -105,6 +111,15 @@
   <p class="hhint">Tap a file to open it. Files on this device: <button class="link" type="button" id="homeOpen">open from device</button>.</p>
 </div>
 
+<div class="modal" id="signModal" hidden>
+  <div class="mcard" role="dialog" aria-modal="true" aria-labelledby="signTitle">
+    <h2 id="signTitle">Draw your signature</h2>
+    <p class="hint">Use your finger or mouse in the white box, then tap Use signature and tap the page.</p>
+    <canvas id="signPad" class="signpad" aria-label="Signature box"></canvas>
+    <div class="mrow"><button class="pill" type="button" id="signClear">Clear</button><span class="sp"></span><button class="pill" type="button" id="signCancel">Cancel</button><button class="pill primary" type="button" id="signUse" disabled>Use signature</button></div>
+  </div>
+</div>
+
 <input type="file" id="fileInput" hidden>
 <div class="drop" id="drop" hidden>Drop a file to open it</div>
 
@@ -113,6 +128,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="config.js"></script>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>
