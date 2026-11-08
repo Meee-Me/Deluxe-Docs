@@ -26,6 +26,10 @@ Which drive this page connects to is set in `config.js` (`driveUrl`, by default
 
 ## Redirect from Deluxe Drive
 
+A share link (`…/s/<token>`, made by Deluxe Drive or by Deluxe Convert's **Open in Deluxe Docs**) can be
+opened by anyone, so Docs opens it straight away, even before this browser is connected. Other
+links wait for a link ID.
+
 Deluxe Drive opens this page with the file's direct link appended:
 
 ```

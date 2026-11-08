@@ -869,6 +869,9 @@ var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeou
 
 /* ---------- start ---------- */
 var qp=new URLSearchParams(location.search);
+function isShareLink(raw){
+  try{var u=new URL(raw);return u.protocol==='https:'||/^(localhost|127\.0\.0\.1)$/.test(u.hostname)?/^\/s\/[0-9a-f]{8,64}$/i.test(u.pathname):false}catch(e){return false}
+}
 async function enterApp(){
   $('#gate').hidden=true;$('#app').hidden=false;
   renderAcct();renderTabs();
@@ -899,7 +902,10 @@ async function boot(){
   }
   auth=loadAuth();
   if(!auth){
-    // A file sent from Deluxe Drive waits until this browser is connected.
+    // A share link (…/s/<token>, from Deluxe Drive or Deluxe Convert) can be
+    // opened by anyone, so it opens straight away, without connecting first.
+    if(isShareLink(qp.get('url'))){enterApp();return}
+    // Any other file sent from Deluxe Drive waits until this browser is connected.
     if(qp.get('url')){ss('dd_pending',qp.get('url'));if(qp.get('name'))ss('dd_pending_name',qp.get('name'))}
     showGate();return;
   }
