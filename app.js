@@ -11,11 +11,11 @@ var stage=$('#stage'),side=$('#side'),thumbs=$('#thumbs');
    deployed copy, and the pasted setup wins over it. */
 var SETUP_KEY='dd.config';
 var CFG={},cfgOk=false,driveOrigin='';
-function readSetup(){
+function storedSetup(){
   try{var raw=localStorage.getItem(SETUP_KEY);if(!raw)return null;var v=JSON.parse(raw);return v&&typeof v==='object'?v:null}catch(e){return null}
 }
 function applyConfig(extra){
-  CFG=Object.assign({},window.DELUXE_CONFIG||{},readSetup()||{},extra||{});
+  CFG=Object.assign({},window.DELUXE_CONFIG||{},storedSetup()||{},extra||{});
   cfgOk=!!(CFG.authorizeUrl&&CFG.tokenUrl&&CFG.clientId);
   driveOrigin='';
   try{if(CFG.driveUrl)driveOrigin=new URL(CFG.driveUrl).origin}catch(e){}
@@ -190,8 +190,11 @@ var state={urls:[],ios:[],drawId:0,gen:0};
 var KINDS={pdf:'pdf',docx:'docx',dotx:'docx',docm:'docx',xlsx:'sheet',xlsm:'sheet',xltx:'sheet',xls:'sheet',csv:'sheet',tsv:'sheet',ods:'sheet',
   pptx:'pptx',ppsx:'pptx',potx:'pptx',png:'image',jpg:'image',jpeg:'image',gif:'image',webp:'image',svg:'image',bmp:'image',avif:'image',
   mp4:'video',webm:'video',mov:'video',m4v:'video',mp3:'audio',wav:'audio',m4a:'audio',ogg:'audio',flac:'audio',
-  txt:'text',md:'text',json:'text',xml:'text',html:'text',htm:'text',css:'text',js:'text',ts:'text',py:'text',log:'text',yml:'text',yaml:'text',ini:'text',rtf:'text',sql:'text',sh:'text'};
-var LABEL={pdf:'PDF',docx:'Word',sheet:'Sheet',pptx:'Slides',image:'Image',video:'Video',audio:'Audio',text:'Text',other:'File'};
+  txt:'text',md:'text',json:'text',xml:'text',html:'text',htm:'text',css:'text',js:'text',ts:'text',py:'text',log:'text',yml:'text',yaml:'text',ini:'text',sql:'text',sh:'text',
+  odt:'odf',ott:'odf',odp:'odf',otp:'odf',rtf:'rtf',zip:'zip',jar:'zip',epub:'zip',
+  jfif:'image',apng:'image',ico:'image',ogv:'video',weba:'audio',aac:'audio',opus:'audio',
+  tex:'text',conf:'text',cfg:'text',toml:'text',env:'text',jsx:'text',tsx:'text',java:'text',c:'text',h:'text',cpp:'text',cs:'text',go:'text',rs:'text',rb:'text',php:'text',swift:'text',kt:'text',vue:'text',scss:'text',sass:'text',less:'text',bat:'text',ps1:'text',gitignore:'text'};
+var LABEL={pdf:'PDF',docx:'Word',sheet:'Sheet',pptx:'Slides',image:'Image',video:'Video',audio:'Audio',text:'Text',odf:'OpenDocument',rtf:'RTF',zip:'Archive',other:'File'};
 var MIME={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml',bmp:'image/bmp'};
 function ext(n){var m=/\.([a-z0-9]+)$/i.exec(n||'');return m?m[1].toLowerCase():''}
 function fmtSize(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB'}
@@ -208,8 +211,14 @@ async function sniff(file){
   if(s.indexOf('RIFF')===0&&s.slice(8,12)==='WEBP')return 'image';
   if(b[0]===0x50&&b[1]===0x4B&&window.JSZip){
     try{var z=await JSZip.loadAsync(file),ct=z.file('[Content_Types].xml'),t=ct?await ct.async('string'):'';
-      if(/wordprocessingml/.test(t))return 'docx';if(/spreadsheetml/.test(t))return 'sheet';if(/presentationml/.test(t))return 'pptx'}catch(e){}
+      if(/wordprocessingml/.test(t))return 'docx';if(/spreadsheetml/.test(t))return 'sheet';if(/presentationml/.test(t))return 'pptx';
+      var mt=z.file('mimetype');
+      if(mt){var m=(await mt.async('string')).trim();
+        if(/opendocument\.spreadsheet/.test(m))return 'sheet';
+        if(/opendocument\.(text|presentation)/.test(m))return 'odf'}
+      return 'zip'}catch(e){}
   }
+  if(s.indexOf('{\\rtf')===0)return 'rtf';
   if(b[0]===0xD0&&b[1]===0xCF)return 'other';
   return null;
 }
@@ -220,7 +229,18 @@ async function detect(file,name){
   if(t==='application/pdf')return 'pdf';
   if(t.indexOf('image/')===0)return 'image';if(t.indexOf('video/')===0)return 'video';if(t.indexOf('audio/')===0)return 'audio';
   if(t.indexOf('text/')===0||t==='application/json')return 'text';
+  if(await looksLikeText(file))return 'text';
   return 'other';
+}
+// An unknown extension that is really text (a config file, a log, source code) still opens.
+async function looksLikeText(file){
+  if(!file.size)return false;
+  var b=new Uint8Array(await file.slice(0,8192).arrayBuffer());
+  for(var i=0;i<b.length;i++)if(b[i]===0)return false;
+  try{new TextDecoder('utf-8',{fatal:true}).decode(b);return true}catch(e){
+    // a cut-off multi-byte character at the end of the sample is fine
+    try{new TextDecoder('utf-8',{fatal:true}).decode(b.slice(0,b.length-3));return true}catch(x){return false}
+  }
 }
 
 /* ---------- documents and tabs ---------- */
@@ -668,10 +688,144 @@ R.text=async function(d){
   d.extras=[t.split('\n').length+' lines'];setStatus(d);
   if(cut)stage.append(el('div','note','Showing the first 400,000 characters.'));
 };
+/* ---------- OpenDocument text and slides, RTF, archives ---------- */
+R.odf=async function(d){
+  if(!window.JSZip)throw new Error('The document reader did not load.');
+  var zip=await JSZip.loadAsync(d.file),cf=zip.file('content.xml');
+  if(!cf)throw new Error('This OpenDocument file has no content.');
+  var xml=new DOMParser().parseFromString(await cf.async('string'),'application/xml');
+  var isDeck=/presentation/.test(((await (zip.file('mimetype')||{async:async function(){return ''}}).async('string'))||'')),
+      names={},imgs={};
+  async function imageUrl(href){
+    if(!href)return null;
+    if(imgs[href])return imgs[href];
+    var f=zip.file(href);if(!f)return null;
+    var ext2=(/\.([a-z0-9]+)$/i.exec(href)||[])[1]||'png';
+    imgs[href]=objUrl(new Blob([await f.async('arraybuffer')],{type:MIME[ext2.toLowerCase()]||'application/octet-stream'}));
+    return imgs[href];
+  }
+  async function inline(node,into){
+    for(var c=node.firstChild;c;c=c.nextSibling){
+      if(c.nodeType===3){into.append(document.createTextNode(c.nodeValue));continue}
+      if(c.nodeType!==1)continue;
+      var n=c.tagName;
+      if(n==='text:line-break')into.append(document.createElement('br'));
+      else if(n==='text:tab')into.append(document.createTextNode('\t'));
+      else if(n==='text:s')into.append(document.createTextNode(' '.repeat(+c.getAttribute('text:c')||1)));
+      else if(n==='text:a'){var a=el('a');var h=c.getAttribute('xlink:href')||'';if(/^https?:|^mailto:/i.test(h)){a.href=h;a.target='_blank';a.rel='noopener noreferrer'}await inline(c,a);into.append(a)}
+      else if(n==='draw:frame'){
+        var im=c.getElementsByTagName('draw:image')[0];
+        if(im){var u=await imageUrl(im.getAttribute('xlink:href'));if(u){var i=document.createElement('img');i.src=u;i.alt='';into.append(i)}}
+      }
+      else await inline(c,into);
+    }
+  }
+  async function block(node,into){
+    for(var c=node.firstChild;c;c=c.nextSibling){
+      if(c.nodeType!==1)continue;
+      var n=c.tagName;
+      if(n==='text:h'){var lv=Math.min(4,Math.max(1,+c.getAttribute('text:outline-level')||1)),h=el('h'+lv);await inline(c,h);into.append(h)}
+      else if(n==='text:p'){var p=el('p');await inline(c,p);into.append(p)}
+      else if(n==='text:list'){var ul=el('ul');await block(c,ul);into.append(ul)}
+      else if(n==='text:list-item'){var li=el('li');await block(c,li);into.append(li)}
+      else if(n==='table:table'){
+        var tb=el('table'),bd=el('tbody');
+        for(var r=c.firstChild;r;r=r.nextSibling){
+          if(r.nodeType!==1)continue;
+          var rows=r.tagName==='table:table-row'?[r]:(r.tagName==='table:table-row-group'||r.tagName==='table:table-header-rows'?Array.prototype.filter.call(r.children,function(x){return x.tagName==='table:table-row'}):[]);
+          for(var k=0;k<rows.length;k++){
+            var tr=el('tr');
+            for(var q=rows[k].firstChild;q;q=q.nextSibling){
+              if(q.nodeType!==1||q.tagName!=='table:table-cell')continue;
+              var td=el('td');await block(q,td);
+              var cs=+q.getAttribute('table:number-columns-spanned');if(cs>1)td.colSpan=cs;
+              tr.append(td);
+            }
+            bd.append(tr);
+          }
+        }
+        tb.append(bd);into.append(tb);
+      }
+      else if(n==='text:section'||n==='office:text'||n==='office:body')await block(c,into);
+    }
+  }
+  if(isDeck){
+    var pages=xml.getElementsByTagName('draw:page');
+    d.extras=[pages.length+(pages.length===1?' slide':' slides')];setStatus(d);
+    var wrap=el('div','pages');
+    for(var i=0;i<pages.length;i++){
+      wrap.append(el('div','cap','Slide '+(i+1)));
+      var card=el('div','slidecard');
+      var frames=pages[i].getElementsByTagName('draw:frame');
+      for(var j=0;j<frames.length;j++){
+        var fr=frames[j],tbx=fr.getElementsByTagName('draw:text-box')[0],im=fr.getElementsByTagName('draw:image')[0];
+        if(tbx){var box=el('div','sl-text');await block(tbx,box);if(box.textContent.trim())card.append(box)}
+        else if(im){var u=await imageUrl(im.getAttribute('xlink:href'));if(u){var g=document.createElement('img');g.src=u;g.alt='';card.append(g)}}
+      }
+      if(!card.firstChild)card.append(el('div','sl-text','(empty slide)'));
+      wrap.append(card);
+    }
+    stage.replaceChildren(wrap);
+  }else{
+    var doc=el('div','doc'),body=xml.getElementsByTagName('office:text')[0];
+    if(body)await block(body,doc);
+    if(!doc.textContent.trim()&&!doc.querySelector('img'))doc.append(el('p',null,'This document has no readable content.'));
+    stage.replaceChildren(doc);
+  }
+};
+
+function rtfToText(src){
+  var out='',i=0,depth=0,skip=[],uc=1,n=src.length;
+  var cp=[0x20AC,0,0x201A,0x192,0x201E,0x2026,0x2020,0x2021,0x2C6,0x2030,0x160,0x2039,0x152,0,0x17D,0,0,0x2018,0x2019,0x201C,0x201D,0x2022,0x2013,0x2014,0x2DC,0x2122,0x161,0x203A,0x153,0,0x17E,0x178];
+  while(i<n){
+    var ch=src[i];
+    if(ch==='{'){depth++;i++;continue}
+    if(ch==='}'){if(skip.length&&skip[skip.length-1]===depth)skip.pop();depth--;i++;continue}
+    if(ch==='\\'){
+      var nx=src[i+1];
+      if(nx==='\\'||nx==='{'||nx==='}'){if(!skip.length)out+=nx;i+=2;continue}
+      if(nx==='\''){var h=parseInt(src.substr(i+2,2),16);if(!skip.length&&!isNaN(h))out+=String.fromCharCode(h>=0x80&&h<0xA0&&cp[h-0x80]?cp[h-0x80]:h);i+=4;continue}
+      if(nx==='*'){skip.push(depth);i+=2;continue}
+      var m=/^\\([a-zA-Z]+)(-?\d+)? ?/.exec(src.slice(i,i+40));
+      if(!m){i+=2;continue}
+      var w=m[1],v=m[2];i+=m[0].length;
+      if(w==='par'||w==='line'||w==='sect'||w==='page'){if(!skip.length)out+='\n'}
+      else if(w==='tab'){if(!skip.length)out+='\t'}
+      else if(w==='emdash'){if(!skip.length)out+='\u2014'}
+      else if(w==='endash'){if(!skip.length)out+='\u2013'}
+      else if(w==='bullet'){if(!skip.length)out+='\u2022'}
+      else if(w==='uc'){uc=+v||0}
+      else if(w==='u'){var c=+v;if(c<0)c+=65536;if(!skip.length)out+=String.fromCharCode(c);i+=uc}
+      else if(/^(fonttbl|colortbl|stylesheet|info|pict|header|footer|footnote)$/.test(w))skip.push(depth);
+      continue;
+    }
+    if(ch==='\r'||ch==='\n'){i++;continue}
+    if(!skip.length)out+=ch;
+    i++;
+  }
+  return out.replace(/\n{3,}/g,'\n\n').trim();
+}
+R.rtf=async function(d){
+  var txt=rtfToText(await d.file.text());
+  stage.replaceChildren(el('pre','code',txt||'This document has no readable text.'));
+  d.extras=['text only'];setStatus(d);
+};
+R.zip=async function(d){
+  if(!window.JSZip)throw new Error('The archive reader did not load.');
+  var zip=await JSZip.loadAsync(d.file),rows=[];
+  zip.forEach(function(path,entry){if(!entry.dir)rows.push([path,entry._data&&entry._data.uncompressedSize!=null?entry._data.uncompressedSize:null])});
+  d.extras=[rows.length+(rows.length===1?' file':' files')];setStatus(d);
+  var wrap=el('div','tablewrap'),t=el('table','grid'),th=el('thead'),hr=el('tr');
+  hr.append(el('th',null,'File'),el('th',null,'Size'));th.append(hr);
+  var tb=el('tbody');
+  rows.slice(0,3000).forEach(function(r){var tr=el('tr');tr.append(el('td',null,r[0]),el('td',null,r[1]==null?'':fmtSize(r[1])));tb.append(tr)});
+  t.append(th,tb);wrap.append(t);stage.replaceChildren(wrap);
+  stage.append(el('div','note',rows.length>3000?'Showing the first 3000 of '+rows.length+' files. The files inside cannot be opened from here.':'The files inside an archive cannot be opened from here.'));
+};
 R.other=async function(d){
   var e=ext(d.name);
-  var legacy={doc:'Old .doc files are not supported. Save the file as .docx and open that.',ppt:'Old .ppt files are not supported. Save the file as .pptx and open that.'};
-  showMsg('This file type is not supported yet',legacy[e]||('Deluxe Docs opens PDF, Word, Excel, CSV, PowerPoint, images, audio, video and text files.'+(e?' .'+e+' is not one of them.':'')));
+  var legacy={doc:'Old .doc files are not supported. Save the file as .docx and open that.',ppt:'Old .ppt files are not supported. Save the file as .pptx and open that.',pages:'Apple Pages files cannot be read here. Export the document as PDF or Word first.',numbers:'Apple Numbers files cannot be read here. Export the sheet as Excel or CSV first.',key:'Apple Keynote files cannot be read here. Export the deck as PDF or PowerPoint first.',heic:'HEIC photos are not shown by this browser. Export the photo as JPEG first.',tif:'TIFF images are not shown by this browser. Export the image as PNG or JPEG first.',tiff:'TIFF images are not shown by this browser. Export the image as PNG or JPEG first.'};
+  showMsg('This file type is not supported yet',legacy[e]||('Deluxe Docs opens PDF, Word, Excel, CSV, PowerPoint, OpenDocument, RTF, images, audio, video, archives and text files.'+(e?' .'+e+' is not one of them.':'')));
 };
 
 /* ---------- opening from files and links ---------- */

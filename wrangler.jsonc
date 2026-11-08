@@ -1,0 +1,6 @@
+{
+  // Deluxe Docs: a static site, served by Workers Assets. No server code.
+  "name": "deluxe-docs",
+  "compatibility_date": "2025-09-01",
+  "assets": { "directory": "./" }
+}

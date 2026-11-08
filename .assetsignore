@@ -1,0 +1,8 @@
+# Not part of the website.
+README.md
+wrangler.jsonc
+package.json
+.gitignore
+.nojekyll
+.git
+node_modules
