@@ -217,3 +217,13 @@ pre.code{margin:0;background:var(--surface);padding:16px;border-radius:4px;overf
   #toolbar .grp:last-child{margin-left:auto}
   #openBtn{padding:5px 9px}
 }
+
+/* Deluxe look: the app icon, the shared app switcher, a softer sign-in screen */
+.mark-img{width:22px;height:22px;flex:none;display:block;border-radius:6px}
+.gcard .mark-img{width:30px;height:30px;border-radius:8px}
+.topapps{align-self:center;margin-left:auto;padding-bottom:2px}
+.topapps + .acct{margin-left:0}
+.gate{background:radial-gradient(ellipse at 15% 0%,var(--accent-soft) 0,transparent 55%),radial-gradient(ellipse at 100% 100%,var(--accent-soft) 0,transparent 45%),var(--bg);grid-template-rows:1fr auto;align-content:center;gap:14px}
+.gcard{border-radius:18px;box-shadow:0 18px 50px rgba(16,24,48,.12)}
+.gate-apps{position:absolute;top:12px;right:12px}
+.gate-foot{margin:0;max-width:420px;text-align:center;font-size:12px;color:var(--muted);padding:0 16px}
