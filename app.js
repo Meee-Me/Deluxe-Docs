@@ -10,7 +10,7 @@ var stage=$('#stage'),side=$('#side'),thumbs=$('#thumbs');
    one use). It is pasted here, the drive finds the account it belongs to, and
    this browser gets a key that can only read that account's files. */
 var CFG=window.DELUXE_CONFIG||{};
-var DRIVE=String(CFG.driveUrl||'https://deluxe-drive.deluxelordd.workers.dev').replace(/\/+$/,'');
+var DRIVE=String(CFG.driveUrl||'https://deluxe-drive-xi.vercel.app').replace(/\/+$/,'');
 var driveOrigin='';try{driveOrigin=new URL(DRIVE).origin}catch(e){}
 var LINK_KEY='dd.link';
 var auth=null,memStore={},memLink=null;

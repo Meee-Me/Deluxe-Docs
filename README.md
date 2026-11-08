@@ -22,7 +22,7 @@ Once connected, the **Deluxe Drive** button lists the account's folders and file
 opens any of them in a new tab.
 
 Which drive this page connects to is set in `config.js` (`driveUrl`, by default
-`https://deluxe-drive.deluxelordd.workers.dev`).
+`https://deluxe-drive-xi.vercel.app`, the drive on Vercel; its server is a Vercel Function there).
 
 ## Redirect from Deluxe Drive
 
@@ -47,6 +47,8 @@ Deluxe Drive file URLs must allow cross-origin reads from the viewer's origin (C
 
 ## Run it
 
+- **Vercel (live):** https://deluxe-docs-iota.vercel.app. A static site: Vercel publishes the repository as
+  it is. The drive it connects to is on Vercel too (see `config.js`).
 - **Cloudflare (Workers):** this repository has a `wrangler.jsonc`, so `npx wrangler deploy` (or Workers Builds on
   this repository, deploy command `npx wrangler deploy`) publishes it as the `deluxe-docs` Worker, for example
   `https://deluxe-docs.deluxelordd.workers.dev`. There is no server code; the files are served as they are.
