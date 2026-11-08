@@ -27,7 +27,7 @@ function saveAuth(a){
 function cleanLinkId(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
 async function connectWith(value){
   var id=cleanLinkId(value);
-  if(id.length!==12)throw new Error('A link ID has 12 letters and numbers, like ABCD-EFGH-JKLM. Copy it again from Deluxe Drive.');
+  if(id.length!==12)throw new Error('That code is not complete. A link ID has 12 letters and numbers, like ABCD-EFGH-JKLM.');
   var r;
   try{r=await fetch(DRIVE+'/api/link/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({linkId:id})})}
   catch(e){throw new Error('Deluxe Drive could not be reached. Check your connection and try again.')}
@@ -46,7 +46,7 @@ async function disconnect(){
 function expired(){
   auth=null;saveAuth(null);driveNodes=null;
   showGate();
-  gateError('The connection to Deluxe Drive ended. Generate a new link ID in Deluxe Drive and paste it here.');
+  gateError('You were disconnected from Deluxe Drive. Follow the steps above to connect again.');
 }
 function gateError(t){var g=$('#gerr');g.textContent=t;g.hidden=false}
 function showGate(){
@@ -74,6 +74,18 @@ async function submitLink(){
   finally{connecting=false;btn.disabled=false;btn.textContent='Connect'}
 }
 $('#gateForm').onsubmit=function(e){e.preventDefault();submitLink()};
+$('#pasteBtn').onclick=async function(){
+  var input=$('#linkIn');
+  try{
+    var text=await navigator.clipboard.readText();
+    input.value=String(text||'').trim();
+    if(cleanLinkId(input.value).length===12)submitLink();
+    else gateError('What you copied is not a link ID. Copy the code from Deluxe Drive and try again.');
+  }catch(e){
+    input.focus();
+    gateError('This browser did not let the page paste. Press and hold in the box above, then choose Paste.');
+  }
+};
 // A whole link ID pasted in connects straight away.
 $('#linkIn').addEventListener('input',function(){if(cleanLinkId(this.value).length===12)submitLink()});
 
@@ -163,12 +175,16 @@ function showMsg(title,body,warn,linkHref,actions){
   if(actions){var r=el('div','row');actions.forEach(function(x){var b=el('button','pill'+(x.primary?' primary':''),x.label);b.type='button';b.onclick=x.fn;r.append(b)});m.append(r)}
   stage.append(m);
 }
-function showEmpty(){
-  cur=null;cleanup();side.hidden=true;
+function showEmpty(){showHome()}
+// The start screen: the connected account's files.
+function showHome(){
+  cur=null;cleanup();side.hidden=true;state.gen++;
   $('#sname').textContent='';$('#chips').replaceChildren();
+  togglePanel(null);
+  renderTabs();syncChrome();
+  homeEl.hidden=false;stage.replaceChildren(homeEl);stage.scrollTop=0;
   syncChrome();
-  showMsg('No document open','Open a file from your computer, drop one onto this page, or open one from Deluxe Drive. PDF, Word, Excel, PowerPoint, images, audio, video and text files all work.',false,null,
-    [{label:'Open file',primary:true,fn:function(){$('#fileInput').click()}},{label:'From link',fn:function(){togglePanel('link',true)}}]);
+  driveState();loadDrive(false);
 }
 function renderTabs(){
   var ts=$('#tabstrip');ts.replaceChildren();
@@ -189,6 +205,7 @@ function closeDoc(d){
   else renderTabs();
 }
 function syncChrome(){
+  $('#driveBtn').setAttribute('aria-pressed',String(!cur&&!homeEl.hidden&&homeEl.parentNode===stage));
   var isPdf=!!cur&&cur.kind==='pdf';
   $$('.pdfonly').forEach(function(n){n.hidden=!isPdf});
   $('#zOut').parentNode.hidden=!cur||cur.kind==='audio'||cur.kind==='other';
@@ -589,7 +606,7 @@ R.text=async function(d){
   if(ext(d.name)==='json'){try{t=JSON.stringify(JSON.parse(t),null,2)}catch(e){}}
   if(t.length>400000){t=t.slice(0,400000);cut=true}
   stage.replaceChildren(el('pre','code',t));
-  d.extras=[t.split('\n').length+' lines'];setStatus(d);
+  var nl=t.split('\n').length;d.extras=[nl+(nl===1?' line':' lines')];setStatus(d);
   if(cut)stage.append(el('div','note','Showing the first 400,000 characters.'));
 };
 /* ---------- OpenDocument text and slides, RTF, archives ---------- */
@@ -769,7 +786,7 @@ async function openUrl(raw,hint){
 
 /* ---------- panels, buttons, drop ---------- */
 function togglePanel(which,force){
-  var map={link:['#linkPanel','#linkBtn'],drive:['#drivePanel','#driveBtn']};
+  var map={link:['#linkPanel','#linkBtn']};
   Object.keys(map).forEach(function(k){
     var p=$(map[k][0]),b=$(map[k][1]),open=(k===which)?(force!==undefined?force:p.hidden):false;
     p.hidden=!open;b.setAttribute('aria-expanded',String(open));
@@ -779,19 +796,21 @@ function togglePanel(which,force){
 $('#openBtn').onclick=$('#newTab').onclick=function(){$('#fileInput').click()};
 $('#fileInput').onchange=function(e){var f=e.target.files[0];if(f)openFile(f);e.target.value=''};
 $('#linkBtn').onclick=function(){togglePanel('link')};
-$('#driveBtn').onclick=function(){togglePanel('drive');if(!$('#drivePanel').hidden){driveState();loadDrive(false)}};
+$('#driveBtn').onclick=function(){showHome()};
+$('#homeOpen').onclick=function(){$('#fileInput').click()};
 $('#linkPanel').onsubmit=function(e){e.preventDefault();var v=$('#urlInput').value.trim();if(v)openUrl(v)};
 
 /* ---------- the connected account's files ---------- */
 var driveNodes=null,dFolder=null;
+var homeEl=$('#home'),dListEl=$('#dList'),dCrumbsEl=$('#dCrumbs'),dSearchEl=$('#dSearch'),dStateEl=$('#driveState');
 function driveState(){
-  var s=$('#driveState');s.replaceChildren();
+  var s=dStateEl;s.replaceChildren();
   s.append(el('span','dot'+(auth?' ok':'')),el('span',null,auth?'Connected as '+(auth.name||'your account'):'Not connected'));
 }
 async function loadDrive(force){
   if(!auth)return;
   if(driveNodes&&!force){renderDrive();return}
-  var list=$('#dList');list.replaceChildren(el('div','note','Loading your files...'));
+  var list=dListEl;if(!driveNodes)list.replaceChildren(el('div','note','Loading your files...'));
   try{
     var r=await fetch(DRIVE+'/api/db/nodes',{headers:{Authorization:'Bearer '+auth.token}});
     if(r.status===401){expired();return}
@@ -805,9 +824,9 @@ async function loadDrive(force){
 }
 function fmtDate(ms){if(!ms)return '';try{return new Date(ms).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}catch(e){return ''}}
 function renderDrive(){
-  var list=$('#dList'),crumbs=$('#dCrumbs');
+  var list=dListEl,crumbs=dCrumbsEl;
   if(!driveNodes)return;
-  var q=$('#dSearch').value.trim().toLowerCase();
+  var q=dSearchEl.value.trim().toLowerCase();
   var byId={};driveNodes.forEach(function(n){byId[n.id]=n});
   if(dFolder&&!byId[dFolder])dFolder=null;
   var items=q?driveNodes.filter(function(n){return n.type!=='folder'&&String(n.name||'').toLowerCase().indexOf(q)>-1})
@@ -830,16 +849,15 @@ function renderDrive(){
     var meta=isF?'Folder':[fmtSize(+n.size||0),fmtDate(n.updatedAt)].filter(Boolean).join(' · ');
     if(q&&n.parentId&&byId[n.parentId])meta+=' · in '+byId[n.parentId].name;
     tx.append(el('span','dm',meta));row.append(tx);
-    row.onclick=function(){if(isF){dFolder=n.id;$('#dSearch').value='';renderDrive()}else openDriveFile(n)};
+    row.onclick=function(){if(isF){dFolder=n.id;dSearchEl.value='';renderDrive()}else openDriveFile(n)};
     list.append(row);
   });
   if(items.length>500)list.append(el('div','note','Showing the first 500. Search to find the rest.'));
 }
 function openDriveFile(n){
-  togglePanel('drive',false);
   openUrl(DRIVE+'/api/db/blobs/'+encodeURIComponent(n.id),n.name);
 }
-$('#dSearch').addEventListener('input',renderDrive);
+dSearchEl.addEventListener('input',renderDrive);
 $('#dRefresh').onclick=function(){loadDrive(true)};
 
 var depth=0,drop=$('#drop');
@@ -849,46 +867,36 @@ window.addEventListener('dragover',function(e){e.preventDefault()});
 window.addEventListener('drop',function(e){e.preventDefault();depth=0;drop.hidden=true;var f=e.dataTransfer&&e.dataTransfer.files[0];if(f&&!$('#app').hidden)openFile(f)});
 var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(redraw,200)});
 
-/* ---------- sample PDF ---------- */
-function samplePdf(){
-  var pages=[
-    {h:'Welcome to Deluxe Docs',l:['Open any document from Deluxe Drive and it lands here.','','Supported: PDF, Word, Excel, PowerPoint, images, audio, video, text.','','Use the toolbar to zoom, jump between pages and search.','Try the highlighter, the pen and the note tool on this page.']},
-    {h:'Opening files from Deluxe Drive',l:['Set the redirect address in Deluxe Drive to this viewer.','Opening a file there sends you here and the file opens in a tab.','','The file type is read from the file itself, so a link with no','extension still opens as the right kind of document.']},
-    {h:'Working with several files',l:['Each file opens in its own tab, like a browser.','Thumbnails on the left jump to any page.','Find searches the whole PDF and marks every match.','','Annotations stay with the tab while it is open.']}
-  ];
-  var esc=function(s){return s.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')};
-  var objs=[];objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
-  var kids=[];pages.forEach(function(p,i){kids.push((4+i*2)+' 0 R')});
-  objs[2]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+pages.length+' >>';
-  objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
-  pages.forEach(function(p,i){
-    var s='BT /F1 26 Tf 60 720 Td ('+esc(p.h)+') Tj ET\nBT /F1 13 Tf 60 676 Td 22 TL\n';
-    p.l.forEach(function(x,k){s+=(k?'T* ':'')+'('+esc(x)+') Tj\n'});s+='ET';
-    objs[4+i*2]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents '+(5+i*2)+' 0 R >>';
-    objs[5+i*2]='<< /Length '+s.length+' >>\nstream\n'+s+'\nendstream';
-  });
-  var out='%PDF-1.4\n',off=[];
-  for(var i=1;i<objs.length;i++){off[i]=out.length;out+=i+' 0 obj\n'+objs[i]+'\nendobj\n'}
-  var xr=out.length;out+='xref\n0 '+objs.length+'\n0000000000 65535 f \n';
-  for(var j=1;j<objs.length;j++)out+=('0000000000'+off[j]).slice(-10)+' 00000 n \n';
-  out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
-  return new File([out],'welcome-to-deluxe-docs.pdf',{type:'application/pdf'});
-}
-
 /* ---------- start ---------- */
 var qp=new URLSearchParams(location.search);
 async function enterApp(){
   $('#gate').hidden=true;$('#app').hidden=false;
-  renderAcct();driveState();renderTabs();syncChrome();
+  renderAcct();renderTabs();
   var pend=ss('dd_pending')||qp.get('url');ss('dd_pending',null);
   var pendName=ss('dd_pending_name')||qp.get('name')||null;ss('dd_pending_name',null);
   if(qp.get('url'))history.replaceState(null,'',location.pathname);
   qp=new URLSearchParams('');
   if(pend){await openUrl(pend,pendName);return}
-  if(!docs.length)await openFile(samplePdf(),'welcome-to-deluxe-docs.pdf',true);
-  togglePanel('drive',true);loadDrive(false);
+  showHome();
 }
 async function boot(){
+  $('#driveLink').href=DRIVE;
+  // Deluxe Drive's "Open Deluxe Docs" button sends the link id along, so
+  // nothing has to be copied or typed.
+  // It comes after # so it is never sent to any server, and it is removed
+  // from the address bar straight away.
+  var hm=/(?:^#|&)link=([^&]+)/.exec(location.hash||'');
+  var sent=hm?decodeURIComponent(hm[1]):qp.get('link');
+  if(sent){
+    var rest=new URLSearchParams(location.search);rest.delete('link');
+    history.replaceState(null,'',location.pathname+(rest.toString()?'?'+rest.toString():''));
+    if(qp.get('url')){ss('dd_pending',qp.get('url'));if(qp.get('name'))ss('dd_pending_name',qp.get('name'))}
+    qp=new URLSearchParams('');
+    showGate();
+    $('#linkIn').value=sent;
+    await submitLink();
+    return;
+  }
   auth=loadAuth();
   if(!auth){
     // A file sent from Deluxe Drive waits until this browser is connected.

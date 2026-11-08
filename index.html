@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Deluxe Docs</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
 </head>
 <body>
@@ -14,12 +14,20 @@
 <section class="gate" id="gate" hidden>
   <div class="gcard">
     <div class="brand"><span class="mark" aria-hidden="true"></span><span class="t">Deluxe Docs</span></div>
-    <h1>Connect to Deluxe Drive</h1>
-    <p>In Deluxe Drive, open the account menu, choose <b>Connect Deluxe Docs</b> and press <b>Generate link ID</b>. Paste it here within 60 seconds.</p>
+    <h1>Open your Deluxe Drive files</h1>
+    <ol class="steps">
+      <li><span>Open <a id="driveLink" href="https://deluxe-drive.deluxelordd.workers.dev" target="_blank" rel="noopener noreferrer">Deluxe Drive</a> and sign in.</span></li>
+      <li><span>Tap your picture in the top right corner, then <b>Connect Deluxe Docs</b>.</span></li>
+      <li><span>Tap <b>Generate link ID</b>, then <b>Open Deluxe Docs</b>. Your files open here.</span></li>
+    </ol>
+    <div class="or"><span>or type the code from Deluxe Drive</span></div>
     <form class="gform" id="gateForm" autocomplete="off">
-      <label class="field" for="linkIn"><span class="flabel">Link ID</span>
-        <input id="linkIn" class="linkin" type="text" placeholder="ABCD-EFGH-JKLM" maxlength="40" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go"></label>
-      <button class="pill primary" id="connectBtn" type="submit">Connect</button>
+      <label class="sr" for="linkIn">Link ID</label>
+      <input id="linkIn" class="linkin" type="text" placeholder="ABCD-EFGH-JKLM" maxlength="40" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go">
+      <div class="grow">
+        <button class="pill" id="pasteBtn" type="button">Paste</button>
+        <button class="pill primary" id="connectBtn" type="submit">Connect</button>
+      </div>
     </form>
     <div class="hint" id="gerr" role="alert" hidden></div>
   </div>
@@ -67,9 +75,9 @@
     </div>
     <div class="sp"></div>
     <div class="grp">
-      <button class="pill" id="linkBtn" aria-expanded="false" aria-controls="linkPanel">From link</button>
-      <button class="pill" id="driveBtn" aria-expanded="false" aria-controls="drivePanel" style="margin-left:6px">Deluxe Drive</button>
-      <button class="pill primary" id="openBtn" style="margin-left:6px">Open file</button>
+      <button class="pill primary" id="driveBtn" aria-pressed="false">My files</button>
+      <button class="pill" id="openBtn" style="margin-left:6px" title="Open a file from this device">Open from device</button>
+      <button class="pill" id="linkBtn" aria-expanded="false" aria-controls="linkPanel" style="margin-left:6px">Open a link</button>
     </div>
   </div>
 
@@ -80,12 +88,6 @@
         <div class="row"><input type="url" id="urlInput" placeholder="https://drive.example.com/files/report.pdf" autocomplete="off"><button class="pill primary" type="submit">Open</button></div></div>
       <p class="hint">Any file type works. The type is read from the file itself, so links without a file extension open too.</p>
     </form>
-    <section class="panel" id="drivePanel" hidden>
-      <div class="dhead"><h2>Deluxe Drive</h2><div class="state" id="driveState"></div></div>
-      <div class="row"><input type="search" id="dSearch" placeholder="Search your files" aria-label="Search your files" autocomplete="off"><button class="pill" type="button" id="dRefresh">Refresh</button></div>
-      <nav class="crumbs" id="dCrumbs" aria-label="Folder"></nav>
-      <div class="dlist" id="dList"></div>
-    </section>
   </div>
 
   <div class="body">
@@ -93,6 +95,14 @@
     <main class="stage" id="stage" aria-live="polite"></main>
   </div>
   <div class="statusbar"><span class="sname" id="sname"></span><span id="chips" style="display:flex;gap:6px;flex-wrap:wrap"></span></div>
+</div>
+
+<div class="home" id="home" hidden>
+  <div class="hhead"><h2>Your files</h2><div class="state" id="driveState"></div></div>
+  <div class="row"><input type="search" id="dSearch" placeholder="Search your files" aria-label="Search your files" autocomplete="off"><button class="pill" type="button" id="dRefresh">Refresh</button></div>
+  <nav class="crumbs" id="dCrumbs" aria-label="Folder"></nav>
+  <div class="dlist" id="dList"></div>
+  <p class="hhint">Tap a file to open it. Files on this device: <button class="link" type="button" id="homeOpen">open from device</button>.</p>
 </div>
 
 <input type="file" id="fileInput" hidden>
@@ -103,6 +113,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="config.js"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

@@ -180,3 +180,40 @@ pre.code{margin:0;background:var(--surface);padding:16px;border-radius:4px;overf
 .dn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .dm{font:12px var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dlist .note{padding:12px;margin:0}
+
+/* friendlier connect screen */
+.gcard{gap:18px}
+.gcard h1{font-size:24px}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:12px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;font-size:16px;line-height:1.45;color:var(--ink)}
+.steps li::before{content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:600 14px var(--body)}
+.steps a{color:var(--accent);font-weight:600}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.grow{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.grow .pill{padding:11px 14px;font-size:16px;text-align:center}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gcard #gerr{font-size:14px;line-height:1.45}
+/* the files home screen */
+.home{max-width:860px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px}
+.hhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
+.hhead h2{font:700 22px/1.2 var(--display);margin:0}
+.home .row{display:flex;gap:8px;flex-wrap:wrap}
+.home #dSearch{font-size:16px;padding:10px 12px}
+.home .dlist{max-height:none;background:transparent;border:0;padding:0;gap:4px}
+.home .drow{padding:12px;border:1px solid var(--line);background:var(--chrome);border-radius:8px}
+.home .drow:hover{border-color:var(--accent)}
+.home .drow svg{width:26px;height:26px}
+.home .dn{font-size:16px}
+.home .dm{font-size:12.5px}
+.hhint{margin:0;color:var(--muted);font-size:13.5px}
+#driveBtn[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent-soft)}
+
+/* phones: keep the toolbar to what fits */
+@media (max-width:600px){
+  #linkBtn{display:none}
+  #toolbar{flex-wrap:wrap;overflow-x:visible;row-gap:6px}
+  #toolbar .sep,#toolbar .sp{display:none}
+  #toolbar .grp:last-child{margin-left:auto}
+  #openBtn{padding:5px 9px}
+}
