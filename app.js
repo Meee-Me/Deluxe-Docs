@@ -880,7 +880,7 @@ async function enterApp(){
   showHome();
 }
 async function boot(){
-  $('#driveLink').href=DRIVE;
+  $('#driveLink').href=CFG.drivePage||DRIVE;
   // Deluxe Drive's "Open Deluxe Docs" button sends the link id along, so
   // nothing has to be copied or typed.
   // It comes after # so it is never sent to any server, and it is removed
