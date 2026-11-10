@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Deluxe Docs</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=9">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
 </head>
 <body>
@@ -15,20 +15,11 @@
   <div class="gcard">
     <div class="brand"><span class="mark" aria-hidden="true"></span><span class="t">Deluxe Docs</span></div>
     <h1>Open your Deluxe Drive files</h1>
-    <ol class="steps">
-      <li><span>Open <a id="driveLink" href="https://deluxe-drive.deluxelordd.workers.dev" target="_blank" rel="noopener noreferrer">Deluxe Drive</a> and sign in.</span></li>
-      <li><span>Tap your picture in the top right corner, then <b>Connect Deluxe Docs</b>.</span></li>
-      <li><span>Tap <b>Generate link ID</b>, then <b>Open Deluxe Docs</b>. Your files open here.</span></li>
-    </ol>
-    <div class="or"><span>or type the code from Deluxe Drive</span></div>
-    <form class="gform" id="gateForm" autocomplete="off">
-      <label class="sr" for="linkIn">Link ID</label>
-      <input id="linkIn" class="linkin" type="text" placeholder="ABCD-EFGH-JKLM" maxlength="40" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go">
-      <div class="grow">
-        <button class="pill" id="pasteBtn" type="button">Paste</button>
-        <button class="pill primary" id="connectBtn" type="submit">Connect</button>
-      </div>
+    <p class="glead">Deluxe Docs uses your Deluxe account. Sign in on Deluxe Main and you come straight back here with all your Deluxe Drive files.</p>
+    <form class="gform" id="gateForm">
+      <button class="pill primary gbig" id="connectBtn" type="submit">Sign in with Deluxe Main</button>
     </form>
+    <p class="glead small">No account yet? <a id="mainLink" href="https://deluxe-main.deluxelordd.workers.dev/" target="_blank" rel="noopener">Create one on Deluxe Main</a>. Your files are in <a id="driveLink" href="https://deluxe-drive.deluxelordd.workers.dev" target="_blank" rel="noopener noreferrer">Deluxe Drive</a>.</p>
     <div class="hint" id="gerr" role="alert" hidden></div>
   </div>
 </section>
@@ -112,7 +103,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="config.js?v=2"></script>
-<script src="app.js?v=11"></script>
+<script src="config.js?v=3"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
