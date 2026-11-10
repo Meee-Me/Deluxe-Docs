@@ -12,7 +12,7 @@ var stage=$('#stage'),side=$('#side'),thumbs=$('#thumbs');
    file list (kept in Deluxe Main) and its files (kept in Deluxe Drive), and
    change nothing. */
 var CFG=window.DELUXE_CONFIG||{};
-var MAIN=String(CFG.mainUrl||'https://deluxe-drive.deluxelordd.workers.dev/main').replace(/\/+$/,'');
+var MAIN=String(CFG.mainUrl||'https://deluxe-main.vercel.app').replace(/\/+$/,'');
 var DRIVE=String(CFG.driveUrl||'https://deluxe-drive.deluxelordd.workers.dev').replace(/\/+$/,'');
 var driveOrigin='';try{driveOrigin=new URL(DRIVE).origin}catch(e){}
 var SESSION_KEY='deluxe.session.v1';
