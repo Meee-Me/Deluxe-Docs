@@ -12,7 +12,7 @@ var stage=$('#stage'),side=$('#side'),thumbs=$('#thumbs');
    file list (kept in Deluxe Main) and its files (kept in Deluxe Drive), and
    change nothing. */
 var CFG=window.DELUXE_CONFIG||{};
-var MAIN=String(CFG.mainUrl||'https://deluxe-main.deluxelordd.workers.dev').replace(/\/+$/,'');
+var MAIN=String(CFG.mainUrl||'https://deluxe-drive.deluxelordd.workers.dev/main').replace(/\/+$/,'');
 var DRIVE=String(CFG.driveUrl||'https://deluxe-drive.deluxelordd.workers.dev').replace(/\/+$/,'');
 var driveOrigin='';try{driveOrigin=new URL(DRIVE).origin}catch(e){}
 var SESSION_KEY='deluxe.session.v1';
@@ -27,7 +27,11 @@ function saveAuth(a){
   memAuth=a;
   try{if(a)localStorage.setItem(SESSION_KEY,JSON.stringify(a));else localStorage.removeItem(SESSION_KEY)}catch(e){}
 }
+var GUEST_KEY='deluxe.guest';
+function isGuest(){try{return localStorage.getItem(GUEST_KEY)==='1'}catch(e){return false}}
+function setGuest(on){try{if(on)localStorage.setItem(GUEST_KEY,'1');else localStorage.removeItem(GUEST_KEY)}catch(e){}}
 function signIn(){
+  setGuest(false);
   var back=location.href.replace(/#.*$/,'');
   location.href=MAIN+'/connect?'+new URLSearchParams({return:back,app:'docs'});
 }
@@ -38,11 +42,11 @@ async function finishSignIn(code){
   var j={};try{j=await r.json()}catch(e){}
   if(!r.ok)throw new Error(j.error||('Deluxe Main answered '+r.status+'. Sign in again.'));
   var a={token:j.token,exp:Date.now()+(+j.expiresIn||86400)*1000,user:j.user||{},app:j.app,main:MAIN,name:(j.user&&j.user.name)||''};
-  saveAuth(a);
+  saveAuth(a);setGuest(false);
   return a;
 }
 async function disconnect(){
-  var a=auth;auth=null;saveAuth(null);driveNodes=null;dFolder=null;
+  var a=auth;auth=null;saveAuth(null);setGuest(false);driveNodes=null;dFolder=null;
   if(a){try{await fetch(MAIN+'/api/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+a.token},credentials:'omit'})}catch(e){}}
   showGate();
 }
@@ -60,11 +64,15 @@ function showGate(){
 }
 function renderAcct(){
   var a=$('#acct');a.replaceChildren();
-  if(!auth)return;
+  if(!auth){
+    var s=el('button','link','Sign in');s.type='button';s.onclick=signIn;
+    a.append(el('span','av','G'),el('span','nm','Guest'),s);return;
+  }
   var nm=auth.name||'Deluxe account';
   a.append(el('span','av',nm.trim().charAt(0).toUpperCase()||'D'),el('span','nm',nm));
   var b=el('button','link','Sign out');b.type='button';b.onclick=disconnect;a.append(b);
 }
+$('#guestBtn').onclick=function(){setGuest(true);enterApp()};
 $('#gateForm').onsubmit=function(e){
   e.preventDefault();
   var btn=$('#connectBtn');btn.disabled=true;btn.textContent='Opening Deluxe Main...';
@@ -792,7 +800,12 @@ function driveState(){
   s.append(el('span','dot'+(auth?' ok':'')),el('span',null,auth?'Signed in as '+(auth.name||'your account'):'Not signed in'));
 }
 async function loadDrive(force){
-  if(!auth)return;
+  if(!auth){
+    // A guest: no Deluxe Drive list, but anything on this device or at a link opens.
+    var g=el('div','note');g.append('You are a guest. ');
+    var b=el('button','link','Sign in with Deluxe Main');b.type='button';b.onclick=signIn;g.append(b,' to see your Deluxe Drive files.');
+    dListEl.replaceChildren(g);return;
+  }
   if(driveNodes&&!force){renderDrive();return}
   var list=dListEl;if(!driveNodes)list.replaceChildren(el('div','note','Loading your files...'));
   try{
@@ -876,8 +889,11 @@ async function boot(){
     catch(e){showGate();gateError(e.message)}
     return;
   }
+  if(/(?:^#|&)deluxe_guest=1/.test(location.hash||'')){setGuest(true);history.replaceState(null,'',location.pathname+location.search)}
   auth=loadAuth();
   if(!auth){
+    // The guest choice is saved: a guest goes straight in.
+    if(isGuest()){enterApp();return}
     if(qp.get('url')){ss('dd_pending',qp.get('url'));if(qp.get('name'))ss('dd_pending_name',qp.get('name'))}
     showGate();return;
   }
