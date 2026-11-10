@@ -217,3 +217,8 @@ pre.code{margin:0;background:var(--surface);padding:16px;border-radius:4px;overf
   #toolbar .grp:last-child{margin-left:auto}
   #openBtn{padding:5px 9px}
 }
+/* Sign in with Deluxe Main */
+.glead{margin:0;font-size:16px;line-height:1.5;color:var(--muted)}
+.glead.small{font-size:14px}
+.glead a{color:var(--accent);font-weight:600}
+.gbig{width:100%;min-height:48px;font-size:16px}

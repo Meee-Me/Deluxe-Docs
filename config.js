@@ -1,7 +1,9 @@
-/* Which Deluxe Drive this copy of Deluxe Docs connects to. driveUrl is the drive's
-   server (on Cloudflare); drivePage is where people open the drive (on Vercel). A link ID made in that
-   drive (account menu, Connect Deluxe Docs, Generate link ID) is pasted here. */
+/* Where this copy of Deluxe Docs finds things.
+   mainUrl:   Deluxe Main, where people sign in (and where the file list is kept)
+   driveUrl:  the Deluxe Drive server, which keeps the file contents
+   drivePage: where people open the drive */
 window.DELUXE_CONFIG = {
+  "mainUrl": "https://deluxe-drive.deluxelordd.workers.dev/main",
   "driveName": "Deluxe Drive",
   "driveUrl": "https://deluxe-drive.deluxelordd.workers.dev",
   "drivePage": "https://deluxe-drive-xi.vercel.app"

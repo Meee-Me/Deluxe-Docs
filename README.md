@@ -1,28 +1,25 @@
 # Deluxe Docs
 
-A document viewer with a PDF Expert style workspace, connected to Deluxe Drive by a link ID. A static site, no build step: `index.html`, `styles.css`, `app.js` and `config.js`.
+A document viewer with a PDF Expert style workspace, that signs in with your Deluxe account (Deluxe Main) and opens your Deluxe Drive files. A static site, no build step: `index.html`, `styles.css`, `app.js` and `config.js`.
 
 - Tabs for several open files, page thumbnails, page jump, zoom, find in PDF
 - Highlight, draw and note tools on PDFs (kept while the tab is open)
 - Opens PDF, Word (.docx), Excel and CSV, PowerPoint (.pptx), OpenDocument (.odt, .ods, .odp), RTF, images, audio, video, zip archives (file list) and text. An unknown extension that is really text (a log, a config file, source code) opens as text
 - Reads the file's own contents to pick the viewer, so links with no extension or the wrong one still open
 
-## Connecting to Deluxe Drive
+## Signing in with Deluxe Main
 
-1. In Deluxe Drive, open the account menu → **Connect Deluxe Docs** → **Generate link ID**.
-   A code like `62EJ-CBTD-V98W` appears and is copied.
-2. Paste it into the **Link ID** box on this page within 60 seconds. It connects as soon as a whole
-   code is pasted (spaces, dashes and lower case are fine).
+Deluxe Docs uses the Deluxe account from Deluxe Main. **Sign in with Deluxe Main** goes to Deluxe Main,
+which signs you in (or makes your account; accounts are only ever made there) and sends you back here
+with a one-use code. This browser then gets a key that lasts 30 days and can only **read**: the Deluxe
+Drive file list (kept in Deluxe Main) and the files (kept in Deluxe Drive). **Sign out** (top right)
+ends it, and so does signing Docs out on Deluxe Main's account page.
 
-The drive finds the account the code belongs to and gives this browser a key that can only read that
-account's files. The key lasts 30 days and is kept in this browser; **Disconnect** (top right) ends it.
-A code works once, and a newer code ends an older one.
+Once signed in, **My files** lists the account's folders and files, with search, and opens any of them.
 
-Once connected, the **Deluxe Drive** button lists the account's folders and files, with search, and
-opens any of them in a new tab.
-
-Which drive this page connects to is set in `config.js` (`driveUrl`, by default
-`https://deluxe-drive.deluxelordd.workers.dev`).
+Where things live is set in `config.js`: `mainUrl` (Deluxe Main), `driveUrl` (the Deluxe Drive
+server) and `drivePage`. Deluxe Main only signs in websites it knows: this site's addresses are listed
+in Deluxe Main's `worker/apps.js`.
 
 ## Redirect from Deluxe Drive
 
@@ -32,8 +29,8 @@ Deluxe Drive opens this page with the file's direct link appended:
 https://YOUR-HOST/deluxe-docs/?url=<file link>&name=report.pdf
 ```
 
-`url` is the file to open and `name` (optional) sets the tab title. If this browser is not connected
-yet, the file waits until a link ID has been pasted, then opens.
+`url` is the file to open and `name` (optional) sets the tab title. If this browser is not signed in
+yet, the file waits until it is, then opens.
 
 Deluxe Drive file URLs must allow cross-origin reads from the viewer's origin (CORS), including the
 `Authorization` header. Share links (`/s/<token>`) already do.

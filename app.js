@@ -5,89 +5,81 @@ var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s
 var el=function(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n};
 var stage=$('#stage'),side=$('#side'),thumbs=$('#thumbs');
 
-/* ---------- Deluxe Drive connection: a link id ---------- */
-/* Deluxe Drive makes a link id (12 letters and digits, good for 60 seconds and
-   one use). It is pasted here, the drive finds the account it belongs to, and
-   this browser gets a key that can only read that account's files. */
+/* ---------- Signing in with Deluxe Main ---------- */
+/* Deluxe Docs uses the Deluxe account. "Sign in with Deluxe Main" goes to
+   Deluxe Main and comes back with a one-use code (#deluxe_code=...), which is
+   traded for this browser's key. The key can read the account's Deluxe Drive
+   file list (kept in Deluxe Main) and its files (kept in Deluxe Drive), and
+   change nothing. */
 var CFG=window.DELUXE_CONFIG||{};
+var MAIN=String(CFG.mainUrl||'https://deluxe-drive.deluxelordd.workers.dev/main').replace(/\/+$/,'');
 var DRIVE=String(CFG.driveUrl||'https://deluxe-drive.deluxelordd.workers.dev').replace(/\/+$/,'');
 var driveOrigin='';try{driveOrigin=new URL(DRIVE).origin}catch(e){}
-var LINK_KEY='dd.link';
-var auth=null,memStore={},memLink=null;
+var SESSION_KEY='deluxe.session.v1';
+var auth=null,memStore={},memAuth=null;
 function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){if(v===undefined)return memStore[k]||null;if(v===null)delete memStore[k];else memStore[k]=v}}
 function loadAuth(){
-  var a=memLink;
-  try{a=JSON.parse(localStorage.getItem(LINK_KEY)||'null')}catch(e){}
-  return a&&a.token&&a.exp>Date.now()&&a.drive===DRIVE?a:null;
+  var a=memAuth;
+  try{a=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(e){}
+  return a&&a.token&&a.exp>Date.now()&&a.main===MAIN?a:null;
 }
 function saveAuth(a){
-  memLink=a;
-  try{if(a)localStorage.setItem(LINK_KEY,JSON.stringify(a));else localStorage.removeItem(LINK_KEY)}catch(e){}
+  memAuth=a;
+  try{if(a)localStorage.setItem(SESSION_KEY,JSON.stringify(a));else localStorage.removeItem(SESSION_KEY)}catch(e){}
 }
-function cleanLinkId(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
-async function connectWith(value){
-  var id=cleanLinkId(value);
-  if(id.length!==12)throw new Error('That code is not complete. A link ID has 12 letters and numbers, like ABCD-EFGH-JKLM.');
+var GUEST_KEY='deluxe.guest';
+function isGuest(){try{return localStorage.getItem(GUEST_KEY)==='1'}catch(e){return false}}
+function setGuest(on){try{if(on)localStorage.setItem(GUEST_KEY,'1');else localStorage.removeItem(GUEST_KEY)}catch(e){}}
+function signIn(){
+  setGuest(false);
+  var back=location.href.replace(/#.*$/,'');
+  location.href=MAIN+'/connect?'+new URLSearchParams({return:back,app:'docs'});
+}
+async function finishSignIn(code){
   var r;
-  try{r=await fetch(DRIVE+'/api/link/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({linkId:id})})}
-  catch(e){throw new Error('Deluxe Drive could not be reached. Check your connection and try again.')}
+  try{r=await fetch(MAIN+'/api/connect/exchange',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code}),credentials:'omit'})}
+  catch(e){throw new Error('Deluxe Main could not be reached. Check your connection and try again.')}
   var j={};try{j=await r.json()}catch(e){}
-  if(!r.ok)throw new Error(j.error||('Deluxe Drive answered '+r.status+'. Try a new link ID.'));
-  var a={token:j.token,exp:Date.now()+(+j.expiresIn||86400)*1000,name:(j.user&&j.user.name)||'',id:(j.user&&j.user.id)||'',drive:DRIVE};
-  saveAuth(a);
+  if(!r.ok)throw new Error(j.error||('Deluxe Main answered '+r.status+'. Sign in again.'));
+  var a={token:j.token,exp:Date.now()+(+j.expiresIn||86400)*1000,user:j.user||{},app:j.app,main:MAIN,name:(j.user&&j.user.name)||''};
+  saveAuth(a);setGuest(false);
   return a;
 }
 async function disconnect(){
-  var a=auth;auth=null;saveAuth(null);driveNodes=null;dFolder=null;
-  if(a){try{await fetch(DRIVE+'/api/link/session',{method:'DELETE',headers:{Authorization:'Bearer '+a.token}})}catch(e){}}
+  var a=auth;auth=null;saveAuth(null);setGuest(false);driveNodes=null;dFolder=null;
+  if(a){try{await fetch(MAIN+'/api/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+a.token},credentials:'omit'})}catch(e){}}
   showGate();
 }
-// The key ran out or was ended in Deluxe Drive.
+// The key ran out or was ended on Deluxe Main.
 function expired(){
   auth=null;saveAuth(null);driveNodes=null;
   showGate();
-  gateError('You were disconnected from Deluxe Drive. Follow the steps above to connect again.');
+  gateError('You were signed out. Sign in with Deluxe Main again.');
 }
 function gateError(t){var g=$('#gerr');g.textContent=t;g.hidden=false}
 function showGate(){
   $('#app').hidden=true;$('#gate').hidden=false;
   $('#gerr').hidden=true;
-  setTimeout(function(){var i=$('#linkIn');if(i)i.focus()},0);
+  setTimeout(function(){var i=$('#connectBtn');if(i)i.focus()},0);
 }
 function renderAcct(){
   var a=$('#acct');a.replaceChildren();
-  if(!auth)return;
-  var nm=auth.name||'Deluxe Drive';
-  a.append(el('span','av',nm.trim().charAt(0).toUpperCase()||'D'),el('span','nm',nm));
-  var b=el('button','link','Disconnect');b.type='button';b.onclick=disconnect;a.append(b);
-}
-var connecting=false;
-async function submitLink(){
-  if(connecting)return;
-  var input=$('#linkIn'),btn=$('#connectBtn');
-  connecting=true;btn.disabled=true;btn.textContent='Connecting...';$('#gerr').hidden=true;
-  try{
-    auth=await connectWith(input.value);
-    input.value='';
-    enterApp();
-  }catch(e){gateError(e.message)}
-  finally{connecting=false;btn.disabled=false;btn.textContent='Connect'}
-}
-$('#gateForm').onsubmit=function(e){e.preventDefault();submitLink()};
-$('#pasteBtn').onclick=async function(){
-  var input=$('#linkIn');
-  try{
-    var text=await navigator.clipboard.readText();
-    input.value=String(text||'').trim();
-    if(cleanLinkId(input.value).length===12)submitLink();
-    else gateError('What you copied is not a link ID. Copy the code from Deluxe Drive and try again.');
-  }catch(e){
-    input.focus();
-    gateError('This browser did not let the page paste. Press and hold in the box above, then choose Paste.');
+  if(!auth){
+    var s=el('button','link','Sign in');s.type='button';s.onclick=signIn;
+    a.append(el('span','av','G'),el('span','nm','Guest'),s);return;
   }
+  var nm=auth.name||'Deluxe account';
+  a.append(el('span','av',nm.trim().charAt(0).toUpperCase()||'D'),el('span','nm',nm));
+  var b=el('button','link','Sign out');b.type='button';b.onclick=disconnect;a.append(b);
+}
+$('#guestBtn').onclick=function(){setGuest(true);enterApp()};
+$('#gateForm').onsubmit=function(e){
+  e.preventDefault();
+  var btn=$('#connectBtn');btn.disabled=true;btn.textContent='Opening Deluxe Main...';
+  // A file sent from Deluxe Drive waits until this browser is signed in.
+  if(qp.get('url')){ss('dd_pending',qp.get('url'));if(qp.get('name'))ss('dd_pending_name',qp.get('name'))}
+  signIn();
 };
-// A whole link ID pasted in connects straight away.
-$('#linkIn').addEventListener('input',function(){if(cleanLinkId(this.value).length===12)submitLink()});
 
 /* ---------- icons ---------- */
 var IC={plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',
@@ -805,18 +797,24 @@ var driveNodes=null,dFolder=null;
 var homeEl=$('#home'),dListEl=$('#dList'),dCrumbsEl=$('#dCrumbs'),dSearchEl=$('#dSearch'),dStateEl=$('#driveState');
 function driveState(){
   var s=dStateEl;s.replaceChildren();
-  s.append(el('span','dot'+(auth?' ok':'')),el('span',null,auth?'Connected as '+(auth.name||'your account'):'Not connected'));
+  s.append(el('span','dot'+(auth?' ok':'')),el('span',null,auth?'Signed in as '+(auth.name||'your account'):'Not signed in'));
 }
 async function loadDrive(force){
-  if(!auth)return;
+  if(!auth){
+    // A guest: no Deluxe Drive list, but anything on this device or at a link opens.
+    var g=el('div','note');g.append('You are a guest. ');
+    var b=el('button','link','Sign in with Deluxe Main');b.type='button';b.onclick=signIn;g.append(b,' to see your Deluxe Drive files.');
+    dListEl.replaceChildren(g);return;
+  }
   if(driveNodes&&!force){renderDrive();return}
   var list=dListEl;if(!driveNodes)list.replaceChildren(el('div','note','Loading your files...'));
   try{
-    var r=await fetch(DRIVE+'/api/db/nodes',{headers:{Authorization:'Bearer '+auth.token}});
+    // The file list is kept in Deluxe Main; the files themselves in Deluxe Drive.
+    var r=await fetch(MAIN+'/api/data/drive?prefix=node:',{headers:{Authorization:'Bearer '+auth.token},credentials:'omit'});
     if(r.status===401){expired();return}
     if(!r.ok)throw new Error('HTTP '+r.status);
     var j=await r.json();
-    driveNodes=(j.nodes||[]).filter(function(n){return n&&!n.trashed});
+    driveNodes=(j.items||[]).map(function(i){return i.value}).filter(function(n){return n&&n.id&&!n.trashed});
     renderDrive();
   }catch(e){
     list.replaceChildren(el('div','note','Your files could not be loaded. Check your connection and press Refresh.'));
@@ -881,32 +879,28 @@ async function enterApp(){
 }
 async function boot(){
   $('#driveLink').href=CFG.drivePage||DRIVE;
-  // Deluxe Drive's "Open Deluxe Docs" button sends the link id along, so
-  // nothing has to be copied or typed.
-  // It comes after # so it is never sent to any server, and it is removed
-  // from the address bar straight away.
-  var hm=/(?:^#|&)link=([^&]+)/.exec(location.hash||'');
-  var sent=hm?decodeURIComponent(hm[1]):qp.get('link');
-  if(sent){
-    var rest=new URLSearchParams(location.search);rest.delete('link');
-    history.replaceState(null,'',location.pathname+(rest.toString()?'?'+rest.toString():''));
-    if(qp.get('url')){ss('dd_pending',qp.get('url'));if(qp.get('name'))ss('dd_pending_name',qp.get('name'))}
-    qp=new URLSearchParams('');
-    showGate();
-    $('#linkIn').value=sent;
-    await submitLink();
+  $('#mainLink').href=MAIN+'/';
+  // Back from Deluxe Main with a one-use code after #. It is removed from the
+  // address bar straight away.
+  var hm=/(?:^#|&)deluxe_code=([0-9a-f]{48})/.exec(location.hash||'');
+  if(hm){
+    history.replaceState(null,'',location.pathname+location.search);
+    try{auth=await finishSignIn(hm[1]);enterApp()}
+    catch(e){showGate();gateError(e.message)}
     return;
   }
+  if(/(?:^#|&)deluxe_guest=1/.test(location.hash||'')){setGuest(true);history.replaceState(null,'',location.pathname+location.search)}
   auth=loadAuth();
   if(!auth){
-    // A file sent from Deluxe Drive waits until this browser is connected.
+    // The guest choice is saved: a guest goes straight in.
+    if(isGuest()){enterApp();return}
     if(qp.get('url')){ss('dd_pending',qp.get('url'));if(qp.get('name'))ss('dd_pending_name',qp.get('name'))}
     showGate();return;
   }
   enterApp();
   // Check the key is still good; a network hiccup is not a reason to sign out.
   try{
-    var r=await fetch(DRIVE+'/api/auth/me',{headers:{Authorization:'Bearer '+auth.token}});
+    var r=await fetch(MAIN+'/api/auth/me',{headers:{Authorization:'Bearer '+auth.token},credentials:'omit'});
     if(r.status===401)expired();
     else if(r.ok){var j=await r.json();if(j.user&&j.user.name&&j.user.name!==auth.name){auth.name=j.user.name;saveAuth(auth);renderAcct();driveState()}}
   }catch(e){}
