@@ -18,6 +18,7 @@
     <p class="glead">Sign in with your Deluxe account to open all your Deluxe Drive files, or continue as a guest to open files from this device or a link.</p>
     <form class="gform" id="gateForm">
       <button class="pill primary gbig" id="connectBtn" type="submit">Sign in with Deluxe Main</button>
+      <button class="pill gbig" id="codeBtn" type="button">Use a code from another device</button>
       <button class="pill gbig" id="guestBtn" type="button">Continue as guest</button>
     </form>
     <p class="glead small">No account yet? <a id="mainLink" href="https://deluxe-main.vercel.app/" target="_blank" rel="noopener">Create one on Deluxe Main</a>. Your files are in <a id="driveLink" href="https://deluxe-drive-xi.vercel.app" target="_blank" rel="noopener noreferrer">Deluxe Drive</a>.</p>
@@ -104,7 +105,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- Deluxe Main's 60-second code window (quiet mode: Docs handles its own sign-in) -->
+<script src="https://deluxe-main.vercel.app/deluxe.js" data-app="docs" data-passive="1"></script>
 <script src="config.js?v=3"></script>
-<script src="app.js?v=13"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

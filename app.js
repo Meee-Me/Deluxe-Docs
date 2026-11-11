@@ -66,13 +66,20 @@ function renderAcct(){
   var a=$('#acct');a.replaceChildren();
   if(!auth){
     var s=el('button','link','Sign in');s.type='button';s.onclick=signIn;
-    a.append(el('span','av','G'),el('span','nm','Guest'),s);return;
+    var k=el('button','link','Use a code');k.type='button';k.onclick=function(){codeWindow('enter')};
+    a.append(el('span','av','G'),el('span','nm','Guest'),s,k);return;
   }
   var nm=auth.name||'Deluxe account';
   a.append(el('span','av',nm.trim().charAt(0).toUpperCase()||'D'),el('span','nm',nm));
-  var b=el('button','link','Sign out');b.type='button';b.onclick=disconnect;a.append(b);
+  var c=el('button','link','Code');c.type='button';c.title='Sign in on another device with a 60-second code';c.onclick=function(){codeWindow('show')};
+  var b=el('button','link','Sign out');b.type='button';b.onclick=disconnect;a.append(c,b);
 }
 $('#guestBtn').onclick=function(){setGuest(true);enterApp()};
+// 60-second codes, with Deluxe Main's window (deluxe.js). It keeps the key in
+// the same place as this page, so signing in with a code just reloads.
+function codeWindow(mode){if(window.Deluxe&&Deluxe.codeDialog)Deluxe.codeDialog(mode);else gateError('Deluxe Main could not be reached. Check your connection.')}
+$('#codeBtn').onclick=function(){codeWindow('enter')};
+if(window.Deluxe&&Deluxe.onChange)Deluxe.onChange(function(u){if(u&&!auth){setGuest(false);location.reload()}});
 $('#gateForm').onsubmit=function(e){
   e.preventDefault();
   var btn=$('#connectBtn');btn.disabled=true;btn.textContent='Opening Deluxe Main...';
