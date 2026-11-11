@@ -1,5 +1,7 @@
 # Deluxe Docs
 
+Live at **https://deluxe-docs-qtp5.vercel.app** (Vercel, built from `main`).
+
 A document viewer with a PDF Expert style workspace, that signs in with your Deluxe account (Deluxe Main) and opens your Deluxe Drive files. A static site, no build step: `index.html`, `styles.css`, `app.js` and `config.js`.
 
 - Tabs for several open files, page thumbnails, page jump, zoom, find in PDF
